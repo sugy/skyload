@@ -60,7 +60,7 @@ void usage() {
   printf("  --port=   : Server Port\n");
   printf("  --table=  : Table Creation Statement (required)\n");
   printf("  --select= : Select Statement\n");
-  printf("  --nwrite= : Number of rows to insert into the table\n");
+  printf("  --rows=   : Number of rows to insert into the table\n");
   printf("  --nread=  : Number of SELECT statement(s) to execute\n");
   printf("  --mysql   : Use MySQL Protocol\n");
   printf("  --help    : Print this help\n");
@@ -68,7 +68,7 @@ void usage() {
 }
 
 void report_error(const char *error) {
-  fprintf(stderr, "Skyfall Error: %s\n", error);
+  fprintf(stderr, "skyfall error: %s\n", error);
 }
 
 int main(int argc, char **argv) {

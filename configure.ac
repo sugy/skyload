@@ -11,8 +11,12 @@ AC_PROG_CC
 
 AM_INIT_AUTOMAKE(-Wall -Werror nostdinc subdir-objects)
 
-AC_FUNC_MALLOC
+AC_TYPE_UINT16_T
+AC_TYPE_UINT32_T
 AC_C_CONST
+
+AC_CHECK_FUNCS([strdup])
+AC_FUNC_MALLOC
 
 #--------------------------------------------------------------------
 # Check for libdrizzle

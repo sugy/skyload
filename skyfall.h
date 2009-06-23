@@ -37,6 +37,12 @@ typedef struct {
   drizzle_st database_handle;
 } SKYFALL;
 
+SKYFALL *skyfall_new(void);
+void skyfall_free(SKYFALL *skyfall);
+
+SKYFALL_SHARE *skyfall_share_new(void);
+void skyfall_share_free(SKYFALL_SHARE *share);
+
 /* takes care of getopt_long() handling */
 bool handle_options(SKYFALL_SHARE *share, int argc, char **argv);
 

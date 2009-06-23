@@ -13,7 +13,6 @@ typedef enum {
   OPT_PORT = 'p',
   OPT_SERVER = 's',
   OPT_CREATE_QUERY,
-  OPT_UPDATE_QUERY,
   OPT_SELECT_QUERY,
   OPT_NUM_ROWS,
   OPT_NUM_SELECT,
@@ -27,8 +26,8 @@ static struct option longopts[] = {
   {"server", required_argument, NULL, OPT_SERVER},
   {"table", required_argument, NULL, OPT_CREATE_QUERY},
   {"select", required_argument, NULL, OPT_SELECT_QUERY},
-  {"nwrite", required_argument, NULL, OPT_NUM_SELECT},
-  {"nread", required_argument, NULL, OPT_NUM_ROWS},
+  {"rows", required_argument, NULL, OPT_NUM_ROWS},
+  {"nread", required_argument, NULL, OPT_NUM_SELECT},
   {0, 0, 0, 0}
 };
 
@@ -44,6 +43,11 @@ bool check_options(SKYFALL_SHARE *share) {
 
   if (share->create_query == NULL) {
     report_error("table creation statement is missing");
+    rv = false;
+  }
+
+  if (share->nwrite <= 0) {
+    report_error("--rows must be set to greater than 0");
     rv = false;
   }
   return rv;
