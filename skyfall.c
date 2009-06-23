@@ -15,29 +15,43 @@ SKYFALL *skyfall_new(void) {
     return NULL;
   }
 
-  skyfall->server = NULL;
-  skyfall->create_query = NULL;
-  skyfall->select_query = NULL;
-  skyfall->mysql_protocol = false;
-  skyfall->nwrite = 0;
-  skyfall->nread = 0;
-
+  skyfall->share = NULL;
   return skyfall;
 }
 
 void skyfall_free(SKYFALL *skyfall) {
   assert(skyfall);
-
-  if (skyfall->server != NULL)
-    free(skyfall->server);
-
-  if (skyfall->create_query != NULL)
-    free(skyfall->create_query);
-
-  if (skyfall->select_query != NULL)
-    free(skyfall->select_query);
-
   free(skyfall);
+}
+
+SKYFALL_SHARE *skyfall_share_new(void) {
+  SKYFALL_SHARE *share = malloc(sizeof(*share));
+
+  if (share == NULL) {
+    return NULL;
+  }
+
+  share->server = NULL;
+  share->create_query = NULL;
+  share->select_query = NULL;
+  share->nwrite = 0;
+  share->nread = 0;
+  share->protocol = 0;
+}
+
+void skyfall_share_free(SKYFALL_SHARE *share) {
+  assert(share);
+
+  if (share->server != NULL)
+    free(share->server);
+
+  if (share->create_query != NULL)
+    free(share->create_query);
+
+  if (share->select_query != NULL)
+    free(share->select_query);
+
+  free(share);
 }
 
 void usage() {
@@ -58,22 +72,36 @@ void report_error(const char *error) {
 }
 
 int main(int argc, char **argv) {
+  SKYFALL_SHARE *share;
   SKYFALL *skyfall;
 
   if (argc == 1)
     usage();
 
+  /* This object is shared among all worker threads */
+  if ((share = skyfall_share_new()) == NULL) {
+    report_error("out of memory");
+    return EXIT_FAILURE;
+  }
+
+  /* Get user options and set it to share */
+  if (handle_options(share, argc, argv) == false)
+    return EXIT_FAILURE;
+
+  /* Check if the provided options make sense */
+  if (check_options(share) == false)
+    return EXIT_FAILURE;
+
+  /* TODO: encapsulate this into create_workers() which will
+           be capable of creating multiple workers */
   if ((skyfall = skyfall_new()) == NULL) {
     report_error("out of memory");
     return EXIT_FAILURE;
   }
 
-  if (handle_options(skyfall, argc, argv) == false)
-    return EXIT_FAILURE;
+  skyfall->share = share;
 
-  if (check_options(skyfall) == false)
-    return EXIT_FAILURE;
-
+  skyfall_share_free(share);
   skyfall_free(skyfall);
   return EXIT_SUCCESS;
 }

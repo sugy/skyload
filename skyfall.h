@@ -20,19 +20,28 @@
 
 #include <libdrizzle/drizzle_client.h>
 
+/* Object shared among all worker threads. Only add items that
+   will not be updated at runtime to this struct  */
 typedef struct {
-  drizzle_st database_handle;
   in_port_t port;
   char *server;
   char *create_query;
   char *select_query;
-  bool mysql_protocol;
+  uint16_t protocol;
   uint32_t nwrite;
   uint32_t nread;
+} SKYFALL_SHARE;
+
+typedef struct {
+  SKYFALL_SHARE *share;
+  drizzle_st database_handle;
 } SKYFALL;
 
 /* takes care of getopt_long() handling */
-bool handle_options(SKYFALL *skyfall, int argc, char **argv);
+bool handle_options(SKYFALL_SHARE *share, int argc, char **argv);
+
+/* checks if the user options make sense */
+bool check_options(SKYFALL_SHARE *share);
 
 /* prints the usage of this program */
 void usage(void);
