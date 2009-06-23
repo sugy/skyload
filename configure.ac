@@ -8,6 +8,7 @@ AC_CONFIG_HEADER([config/config.h])
 AC_CONFIG_MACRO_DIR([config/m4])
 
 AC_PROG_CC
+AM_PROG_CC_C_O
 
 AM_INIT_AUTOMAKE(-Wall -Werror nostdinc subdir-objects)
 
@@ -34,4 +35,4 @@ AC_DEFINE([LICENSE],[BSD],[skyfall is distributed under the BSD license])
 AC_HEADER_STDBOOL
 AC_CONFIG_FILES(Makefile)
 
-AC_OUTPUT
+AC_OUTPUT(t/Makefile)
