@@ -1,0 +1,33 @@
+# Skyfall Autoconf Script
+
+AC_PREREQ(2.59)
+AC_INIT(skyfall, 0.4, dev@torum.net)
+AC_CONFIG_AUX_DIR(config)
+AC_CONFIG_SRCDIR(skyfall.c)
+AC_CONFIG_HEADER([config/config.h])
+AC_CONFIG_MACRO_DIR([config/m4])
+
+AC_PROG_CC
+
+AM_INIT_AUTOMAKE(-Wall -Werror nostdinc subdir-objects)
+
+AC_FUNC_MALLOC
+AC_C_CONST
+
+#--------------------------------------------------------------------
+# Check for libdrizzle
+#--------------------------------------------------------------------
+
+AC_LIB_HAVE_LINKFLAGS(drizzle,,
+[#include <libdrizzle/drizzle.h>],
+[
+  const char *version= drizzle_version()
+])
+AS_IF([test x$ac_cv_libdrizzle = xno],
+      AC_MSG_ERROR([libdrizzle is required for skyfall]))
+
+AC_DEFINE([LICENSE],[BSD],[skyfall is distributed under the BSD license])
+AC_HEADER_STDBOOL
+AC_CONFIG_FILES(Makefile)
+
+AC_OUTPUT
