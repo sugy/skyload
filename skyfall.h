@@ -14,6 +14,7 @@
 #include <stdbool.h>
 #include <stdint.h>
 #include <string.h>
+#include <pthread.h>
 #include <unistd.h>
 #include <getopt.h>
 #include <assert.h>
@@ -38,11 +39,12 @@ typedef struct {
 
 typedef struct {
   SKYFALL_SHARE *share;
+  pthread_t thread_id;
   drizzle_st database_handle;
-} SKYFALL;
+} SKYFALL_WORKER;
 
-SKYFALL *skyfall_new(void);
-void skyfall_free(SKYFALL *skyfall);
+SKYFALL_WORKER *skyfall_worker_new(void);
+void skyfall_worker_free(SKYFALL_WORKER *worker);
 
 SKYFALL_SHARE *skyfall_share_new(void);
 void skyfall_share_free(SKYFALL_SHARE *share);

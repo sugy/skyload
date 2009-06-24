@@ -18,11 +18,11 @@ int main(void) {
 }
 
 static bool allocation_test(void) {
-  SKYFALL *skyfall;
+  SKYFALL_WORKER *worker;
   SKYFALL_SHARE *share;
 
   /* test allocator */
-  if ((skyfall = skyfall_new()) == NULL)
+  if ((worker = skyfall_worker_new()) == NULL)
     return false;
 
   if ((share = skyfall_share_new()) == NULL)
@@ -44,7 +44,7 @@ static bool allocation_test(void) {
   
   /* if this screws up, it will kill the test program */
   skyfall_share_free(share);
-  skyfall_free(skyfall);
+  skyfall_worker_free(worker);
 
   return true;
 }

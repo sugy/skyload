@@ -24,21 +24,23 @@ static bool create_skyfall_database() {
   /* Attempt to drop the database just in case the database
      still exists from the previous run. */
   drizzle_query_str(&connection, &result, SKYFALL_DB_DROP, &ret);
-  drizzle_result_free(&result);
 
   if (ret != DRIZZLE_RETURN_OK) {
     report_error(drizzle_con_error(&connection));
     return false;
   }
+
+  drizzle_result_free(&result);
 
   /* Now we actually create the database */
   drizzle_query_str(&connection, &result, SKYFALL_DB_CREATE, &ret);
-  drizzle_result_free(&result);
 
   if (ret != DRIZZLE_RETURN_OK) {
     report_error(drizzle_con_error(&connection));
     return false;
   }
+
+  drizzle_result_free(&result);
 
   drizzle_con_close(&connection);
   drizzle_con_free(&connection);
@@ -55,17 +57,19 @@ static bool drop_skyfall_database() {
   drizzle_create(&drizzle);
   
   if (drizzle_con_create(&drizzle, &connection) == NULL) {
+    report_error(drizzle_con_error(&connection));
     drizzle_free(&drizzle);
     return false;
   }
 
   drizzle_query_str(&connection, &result, SKYFALL_DB_DROP, &ret);
-  drizzle_result_free(&result);
 
   if (ret != DRIZZLE_RETURN_OK) {
     report_error(drizzle_con_error(&connection));
     return false;
   }
+
+  drizzle_result_free(&result);
 
   drizzle_con_close(&connection);
   drizzle_con_free(&connection);
@@ -75,7 +79,7 @@ static bool drop_skyfall_database() {
 
 int main(int argc, char **argv) {
   SKYFALL_SHARE *share;
-  SKYFALL *skyfall;
+  SKYFALL_WORKER *worker;
 
   if (argc == 1)
     usage();
@@ -95,23 +99,26 @@ int main(int argc, char **argv) {
     return EXIT_FAILURE;
 
   /* TODO: encapsulate this into create_workers() which will
-           be capable of creating multiple workers */
-  if ((skyfall = skyfall_new()) == NULL) {
+           be capable of creating multiple workers. Only create
+           one worker for now */
+  if ((worker = skyfall_worker_new()) == NULL) {
     report_error("out of memory");
     return EXIT_FAILURE;
   }
 
-  skyfall->share = share;
+  worker->share = share;
 
-  drizzle_create(&skyfall->database_handle);
+  drizzle_create(&worker->database_handle);
 
   /* creates a database for skyfall to play in */
-  create_skyfall_database();
+  if (create_skyfall_database() == false)
+    return EXIT_FAILURE;
 
   /* skyfall is done, drop the database */
-  drop_skyfall_database();
+  if (drop_skyfall_database() == false)
+    return EXIT_FAILURE;
 
   skyfall_share_free(share);
-  skyfall_free(skyfall);
+  skyfall_worker_free(worker);
   return EXIT_SUCCESS;
 }

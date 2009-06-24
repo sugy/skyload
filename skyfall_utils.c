@@ -8,20 +8,20 @@
 
 #include "skyfall.h"
 
-SKYFALL *skyfall_new(void) {
-  SKYFALL *skyfall = malloc(sizeof(*skyfall));
+SKYFALL_WORKER *skyfall_worker_new(void) {
+  SKYFALL_WORKER *worker = malloc(sizeof(*worker));
 
-  if (skyfall == NULL) {
+  if (worker == NULL) {
     return NULL;
   }
 
-  skyfall->share = NULL;
-  return skyfall;
+  worker->share = NULL;
+  return worker;
 }
 
-void skyfall_free(SKYFALL *skyfall) {
-  assert(skyfall);
-  free(skyfall);
+void skyfall_worker_free(SKYFALL_WORKER *worker) {
+  if (worker != NULL)
+    free(worker);
 }
 
 SKYFALL_SHARE *skyfall_share_new(void) {

@@ -19,6 +19,8 @@ AC_C_CONST
 AC_CHECK_FUNCS([strdup])
 AC_FUNC_MALLOC
 
+AC_SEARCH_LIBS(pthread)
+
 #--------------------------------------------------------------------
 # Check for libdrizzle
 #--------------------------------------------------------------------
