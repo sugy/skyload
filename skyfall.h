@@ -20,6 +20,10 @@
 
 #include <libdrizzle/drizzle_client.h>
 
+#define SKYFALL_DB_NAME "skyfall"
+#define SKYFALL_DB_CREATE "CREATE DATABASE skyfall"
+#define SKYFALL_DB_DROP "DROP DATABASE IF EXISTS skyfall"
+
 /* Object shared among all worker threads. Only add items that
    will not be updated at runtime to this struct  */
 typedef struct {

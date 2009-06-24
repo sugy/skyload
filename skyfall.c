@@ -8,6 +8,71 @@
 
 #include "skyfall.h"
 
+static bool create_skyfall_database() {
+  drizzle_st drizzle;
+  drizzle_con_st connection;
+  drizzle_return_t ret;
+  drizzle_result_st result;
+
+  drizzle_create(&drizzle);
+  
+  if (drizzle_con_create(&drizzle, &connection) == NULL) {
+    drizzle_free(&drizzle);
+    return false;
+  }
+
+  /* Attempt to drop the database just in case the database
+     still exists from the previous run. */
+  drizzle_query_str(&connection, &result, SKYFALL_DB_DROP, &ret);
+  drizzle_result_free(&result);
+
+  if (ret != DRIZZLE_RETURN_OK) {
+    report_error(drizzle_con_error(&connection));
+    return false;
+  }
+
+  /* Now we actually create the database */
+  drizzle_query_str(&connection, &result, SKYFALL_DB_CREATE, &ret);
+  drizzle_result_free(&result);
+
+  if (ret != DRIZZLE_RETURN_OK) {
+    report_error(drizzle_con_error(&connection));
+    return false;
+  }
+
+  drizzle_con_close(&connection);
+  drizzle_con_free(&connection);
+  drizzle_free(&drizzle);
+  return true;
+}
+
+static bool drop_skyfall_database() {
+  drizzle_st drizzle;
+  drizzle_con_st connection;
+  drizzle_return_t ret;
+  drizzle_result_st result;
+
+  drizzle_create(&drizzle);
+  
+  if (drizzle_con_create(&drizzle, &connection) == NULL) {
+    drizzle_free(&drizzle);
+    return false;
+  }
+
+  drizzle_query_str(&connection, &result, SKYFALL_DB_DROP, &ret);
+  drizzle_result_free(&result);
+
+  if (ret != DRIZZLE_RETURN_OK) {
+    report_error(drizzle_con_error(&connection));
+    return false;
+  }
+
+  drizzle_con_close(&connection);
+  drizzle_con_free(&connection);
+  drizzle_free(&drizzle);
+  return true;
+}
+
 int main(int argc, char **argv) {
   SKYFALL_SHARE *share;
   SKYFALL *skyfall;
@@ -37,6 +102,14 @@ int main(int argc, char **argv) {
   }
 
   skyfall->share = share;
+
+  drizzle_create(&skyfall->database_handle);
+
+  /* creates a database for skyfall to play in */
+  create_skyfall_database();
+
+  /* skyfall is done, drop the database */
+  drop_skyfall_database();
 
   skyfall_share_free(share);
   skyfall_free(skyfall);
