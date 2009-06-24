@@ -8,7 +8,9 @@
 
 #include "skyfall.h"
 
-static bool create_skyfall_database() {
+static bool create_skyfall_database(SKYFALL_SHARE *share) {
+  assert(share);
+
   drizzle_st drizzle;
   drizzle_con_st connection;
   drizzle_return_t ret;
@@ -20,6 +22,9 @@ static bool create_skyfall_database() {
     drizzle_free(&drizzle);
     return false;
   }
+
+  drizzle_con_set_tcp(&connection, share->server, share->port);
+  drizzle_con_add_options(&connection, share->protocol);
 
   /* Attempt to drop the database just in case the database
      still exists from the previous run. */
@@ -48,7 +53,7 @@ static bool create_skyfall_database() {
   return true;
 }
 
-static bool drop_skyfall_database() {
+static bool drop_skyfall_database(SKYFALL_SHARE *share) {
   drizzle_st drizzle;
   drizzle_con_st connection;
   drizzle_return_t ret;
@@ -61,6 +66,9 @@ static bool drop_skyfall_database() {
     drizzle_free(&drizzle);
     return false;
   }
+
+  drizzle_con_set_tcp(&connection, share->server, share->port);
+  drizzle_con_add_options(&connection, share->protocol);
 
   drizzle_query_str(&connection, &result, SKYFALL_DB_DROP, &ret);
 
@@ -77,9 +85,14 @@ static bool drop_skyfall_database() {
   return true;
 }
 
+void *workload(void *arg) {
+  fprintf(stderr, "I'm your thread!\n");
+}
+
 int main(int argc, char **argv) {
   SKYFALL_SHARE *share;
   SKYFALL_WORKER *worker;
+  pthread_attr_t joinable;
 
   if (argc == 1)
     usage();
@@ -108,14 +121,23 @@ int main(int argc, char **argv) {
 
   worker->share = share;
 
-  drizzle_create(&worker->database_handle);
+  pthread_attr_init(&joinable);
+  pthread_attr_setdetachstate(&joinable, PTHREAD_CREATE_JOINABLE);
 
   /* creates a database for skyfall to play in */
-  if (create_skyfall_database() == false)
+  if (create_skyfall_database(share) == false)
     return EXIT_FAILURE;
 
+  /* only create one worker for development purpose */
+  drizzle_create(&worker->database_handle);
+
+  /* start benchmarking */
+  pthread_create(&worker->thread_id, &joinable, workload, NULL);
+  pthread_attr_destroy(&joinable);
+  pthread_join(worker->thread_id, NULL);
+
   /* skyfall is done, drop the database */
-  if (drop_skyfall_database() == false)
+  if (drop_skyfall_database(share) == false)
     return EXIT_FAILURE;
 
   skyfall_share_free(share);
