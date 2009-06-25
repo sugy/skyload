@@ -54,6 +54,8 @@ static bool create_skyfall_database(SKYFALL_SHARE *share) {
 }
 
 static bool drop_skyfall_database(SKYFALL_SHARE *share) {
+  assert(share);
+
   drizzle_st drizzle;
   drizzle_con_st connection;
   drizzle_return_t ret;
@@ -87,6 +89,7 @@ static bool drop_skyfall_database(SKYFALL_SHARE *share) {
 
 void *workload(void *arg) {
   fprintf(stderr, "I'm your thread!\n");
+  return NULL;
 }
 
 int main(int argc, char **argv) {

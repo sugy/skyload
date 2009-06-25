@@ -5,5 +5,5 @@ SUBDIRS = t
 bin_PROGRAMS   = skyfall 
 
 skyfall_SOURCES = skyfall.c skyfall_utils.c skyfall_options.c
-skyfall_CFLAGS  = $(AM_CFLAGS)
+skyfall_CFLAGS  = $(AM_CFLAGS) -Wall
 skyfall_LDFLAGS = $(LIBDRIZZLE) -lpthread

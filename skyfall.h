@@ -35,6 +35,7 @@ typedef struct {
   uint16_t protocol;
   uint32_t nwrite;
   uint32_t nread;
+  uint32_t concurrency;
 } SKYFALL_SHARE;
 
 typedef struct {

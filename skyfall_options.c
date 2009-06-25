@@ -15,6 +15,7 @@ typedef enum {
   OPT_CREATE_QUERY,
   OPT_SELECT_QUERY,
   OPT_NUM_ROWS,
+  OPT_CONCURRENCY,
   OPT_NUM_SELECT,
   OPT_MYSQL_PROT
 } skyfall_options;
@@ -27,6 +28,7 @@ static struct option longopts[] = {
   {"table", required_argument, NULL, OPT_CREATE_QUERY},
   {"select", required_argument, NULL, OPT_SELECT_QUERY},
   {"rows", required_argument, NULL, OPT_NUM_ROWS},
+  {"concurrency", required_argument, NULL, OPT_CONCURRENCY},
   {"nread", required_argument, NULL, OPT_NUM_SELECT},
   {0, 0, 0, 0}
 };
@@ -34,7 +36,6 @@ static struct option longopts[] = {
 bool check_options(SKYFALL_SHARE *share) {
   assert(share);
   bool rv = true;
-  bool query_existence = false;
 
   if (share->server == NULL) {
     report_error("hostname is missing");
@@ -55,7 +56,7 @@ bool check_options(SKYFALL_SHARE *share) {
 
 bool handle_options(SKYFALL_SHARE *share, int argc, char **argv) {
   assert(share);
-  int ch;
+  int ch, temp;
 
   while ((ch = getopt_long(argc, argv, "hs:p:", longopts, NULL)) != -1) {
     switch(ch) {
@@ -85,6 +86,10 @@ bool handle_options(SKYFALL_SHARE *share, int argc, char **argv) {
       break;
     case OPT_NUM_ROWS:
       share->nwrite = (in_port_t)atoi(optarg);
+      break;
+    case OPT_CONCURRENCY:
+      temp = atoi(optarg);
+      share->concurrency = (in_port_t)(temp <= 0) ? 1 : temp;
       break;
     case OPT_NUM_SELECT:
       share->nread = (in_port_t)atoi(optarg);
