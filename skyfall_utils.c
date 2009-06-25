@@ -36,7 +36,10 @@ SKYFALL_SHARE *skyfall_share_new(void) {
   share->select_query = NULL;
   share->nwrite = 0;
   share->nread = 0;
+  share->concurrency = 1;
   share->protocol = 0;
+
+  return share;
 }
 
 void skyfall_share_free(SKYFALL_SHARE *share) {
@@ -56,14 +59,15 @@ void skyfall_share_free(SKYFALL_SHARE *share) {
 
 void usage() {
   printf("Skyfall: Parameters with '=' requires an argument\n");
-  printf("  --server= : Server Hostname (required)\n");
-  printf("  --port=   : Server Port\n");
-  printf("  --table=  : Table Creation Statement (required)\n");
-  printf("  --select= : Select Statement\n");
-  printf("  --rows=   : Number of rows to insert into the table\n");
-  printf("  --nread=  : Number of SELECT statement(s) to execute\n");
-  printf("  --mysql   : Use MySQL Protocol\n");
-  printf("  --help    : Print this help\n");
+  printf("  --server=      : Server Hostname (required)\n");
+  printf("  --port=        : Server Port\n");
+  printf("  --table=       : Table Creation Statement (required)\n");
+  printf("  --select=      : Select Statement\n");
+  printf("  --concurrency= : Number of simultaneous clients\n");
+  printf("  --rows=        : Number of rows to insert into the table\n");
+  printf("  --nread=       : Number of SELECT statement(s) to execute\n");
+  printf("  --mysql        : Use MySQL Protocol\n");
+  printf("  --help         : Print this help\n");
   exit(EXIT_SUCCESS);
 }
 
