@@ -14,8 +14,8 @@ SKYFALL_WORKER *skyfall_worker_new(void) {
   if (worker == NULL) {
     return NULL;
   }
-
   worker->share = NULL;
+  worker->unique_id = 0;
   return worker;
 }
 
@@ -55,6 +55,37 @@ void skyfall_share_free(SKYFALL_SHARE *share) {
     free(share->select_query);
 
   free(share);
+}
+
+SKYFALL_WORKER **create_workers(SKYFALL_SHARE *share) {
+  assert(share && share->concurrency > 0);
+
+  SKYFALL_WORKER **workers = malloc(sizeof(SKYFALL_WORKER *)
+                                    * share->concurrency);
+  if (workers == NULL)
+    return NULL;
+
+  for (int i = 0; i < share->concurrency; i++) {
+    if ((workers[i] = skyfall_worker_new()) == NULL)
+      return NULL;
+
+    drizzle_create(&workers[i]->database_handle);
+    workers[i]->share = share;
+    workers[i]->unique_id = i + 1;
+  }
+  return workers;
+}
+
+void destroy_workers(SKYFALL_WORKER **workers) {
+  assert(workers);
+
+  uint32_t nworkers = workers[0]->share->concurrency;
+
+  for (int i = 0; i < nworkers; i++) {
+    drizzle_free(&workers[i]->database_handle);
+    skyfall_worker_free(workers[i]);
+  }
+  free(workers);
 }
 
 void usage() {

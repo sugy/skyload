@@ -42,6 +42,7 @@ typedef struct {
   SKYFALL_SHARE *share;
   pthread_t thread_id;
   drizzle_st database_handle;
+  uint32_t unique_id;
 } SKYFALL_WORKER;
 
 SKYFALL_WORKER *skyfall_worker_new(void);
@@ -55,6 +56,12 @@ bool handle_options(SKYFALL_SHARE *share, int argc, char **argv);
 
 /* checks if the user options make sense */
 bool check_options(SKYFALL_SHARE *share);
+
+/* create an array of workers*/
+SKYFALL_WORKER **create_workers(SKYFALL_SHARE *share);
+
+/* free an array of workers*/
+void destroy_workers(SKYFALL_WORKER **workers);
 
 /* prints the usage of this program */
 void usage(void);

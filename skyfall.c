@@ -88,13 +88,15 @@ static bool drop_skyfall_database(SKYFALL_SHARE *share) {
 }
 
 void *workload(void *arg) {
-  fprintf(stderr, "I'm your thread!\n");
+  assert(arg);
+  SKYFALL_WORKER *context = (SKYFALL_WORKER *)arg;
+  fprintf(stderr, "I'm your thread! id: %d\n", context->unique_id);
   return NULL;
 }
 
 int main(int argc, char **argv) {
   SKYFALL_SHARE *share;
-  SKYFALL_WORKER *worker;
+  SKYFALL_WORKER **workers;
   pthread_attr_t joinable;
 
   if (argc == 1)
@@ -114,36 +116,43 @@ int main(int argc, char **argv) {
   if (check_options(share) == false)
     return EXIT_FAILURE;
 
-  /* TODO: encapsulate this into create_workers() which will
-           be capable of creating multiple workers. Only create
-           one worker for now */
-  if ((worker = skyfall_worker_new()) == NULL) {
+  /* Create worker object(s) */
+  if ((workers = create_workers(share)) == NULL) {
     report_error("out of memory");
     return EXIT_FAILURE;
   }
-
-  worker->share = share;
-
-  pthread_attr_init(&joinable);
-  pthread_attr_setdetachstate(&joinable, PTHREAD_CREATE_JOINABLE);
 
   /* creates a database for skyfall to play in */
   if (create_skyfall_database(share) == false)
     return EXIT_FAILURE;
 
-  /* only create one worker for development purpose */
-  drizzle_create(&worker->database_handle);
+  pthread_attr_init(&joinable);
+  pthread_attr_setdetachstate(&joinable, PTHREAD_CREATE_JOINABLE);
 
-  /* start benchmarking */
-  pthread_create(&worker->thread_id, &joinable, workload, NULL);
+  /* Start benchmarking */
+  for (int i = 0; i < share->concurrency; i++) {
+    if (pthread_create(&workers[i]->thread_id, &joinable, workload,
+                       (void *)workers[i])) {
+      report_error("failed to create worker thread");
+      return EXIT_FAILURE;
+    }
+  }
+
   pthread_attr_destroy(&joinable);
-  pthread_join(worker->thread_id, NULL);
+
+  /* Wait for threads to finish their workout */
+  for (int i = 0; i < share->concurrency; i++) {
+    if (pthread_join(workers[i]->thread_id, NULL) != 0) {
+      report_error("error while waiting for threads to terminate.");
+      return EXIT_FAILURE;
+    }
+  }
 
   /* skyfall is done, drop the database */
   if (drop_skyfall_database(share) == false)
     return EXIT_FAILURE;
 
+  destroy_workers(workers);
   skyfall_share_free(share);
-  skyfall_worker_free(worker);
   return EXIT_SUCCESS;
 }
