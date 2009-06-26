@@ -18,13 +18,11 @@ static bool create_skyfall_database(SKYFALL_SHARE *share) {
 
   drizzle_create(&drizzle);
   
-  if (drizzle_con_create(&drizzle, &connection) == NULL) {
+  if (!skyfall_create_connection(share, &drizzle, &connection)) {
+    report_error("failed to initialize connection");
     drizzle_free(&drizzle);
     return false;
   }
-
-  drizzle_con_set_tcp(&connection, share->server, share->port);
-  drizzle_con_add_options(&connection, share->protocol);
 
   /* Attempt to drop the database just in case the database
      still exists from the previous run. */
@@ -34,7 +32,6 @@ static bool create_skyfall_database(SKYFALL_SHARE *share) {
     report_error(drizzle_con_error(&connection));
     return false;
   }
-
   drizzle_result_free(&result);
 
   /* Now we actually create the database */
@@ -44,11 +41,9 @@ static bool create_skyfall_database(SKYFALL_SHARE *share) {
     report_error(drizzle_con_error(&connection));
     return false;
   }
-
   drizzle_result_free(&result);
 
-  drizzle_con_close(&connection);
-  drizzle_con_free(&connection);
+  skyfall_close_connection(&connection);
   drizzle_free(&drizzle);
   return true;
 }
@@ -62,15 +57,12 @@ static bool drop_skyfall_database(SKYFALL_SHARE *share) {
   drizzle_result_st result;
 
   drizzle_create(&drizzle);
-  
-  if (drizzle_con_create(&drizzle, &connection) == NULL) {
-    report_error(drizzle_con_error(&connection));
+
+  if (!skyfall_create_connection(share, &drizzle, &connection)) {
+    report_error("failed to initialize connection");
     drizzle_free(&drizzle);
     return false;
   }
-
-  drizzle_con_set_tcp(&connection, share->server, share->port);
-  drizzle_con_add_options(&connection, share->protocol);
 
   drizzle_query_str(&connection, &result, SKYFALL_DB_DROP, &ret);
 
@@ -81,8 +73,7 @@ static bool drop_skyfall_database(SKYFALL_SHARE *share) {
 
   drizzle_result_free(&result);
 
-  drizzle_con_close(&connection);
-  drizzle_con_free(&connection);
+  skyfall_close_connection(&connection);
   drizzle_free(&drizzle);
   return true;
 }

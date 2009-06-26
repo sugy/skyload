@@ -57,6 +57,27 @@ void skyfall_share_free(SKYFALL_SHARE *share) {
   free(share);
 }
 
+bool skyfall_create_connection(SKYFALL_SHARE *share, drizzle_st *handle,
+                               drizzle_con_st *conn) {
+  assert(share && handle);
+
+  if (share->server == NULL || share->port == 0)
+    return false;
+
+  if (drizzle_con_create(handle, conn) == NULL)
+    return false;
+
+  drizzle_con_set_tcp(conn, share->server, share->port);
+  drizzle_con_add_options(conn, share->protocol);
+  return true;
+}
+
+void skyfall_close_connection(drizzle_con_st *conn) {
+  assert(conn);
+  drizzle_con_close(conn);
+  drizzle_con_free(conn);
+}
+
 SKYFALL_WORKER **create_workers(SKYFALL_SHARE *share) {
   assert(share && share->concurrency > 0);
 

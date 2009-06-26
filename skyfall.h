@@ -57,6 +57,13 @@ bool handle_options(SKYFALL_SHARE *share, int argc, char **argv);
 /* checks if the user options make sense */
 bool check_options(SKYFALL_SHARE *share);
 
+/* initialize a connection for the given database handle */
+bool skyfall_create_connection(SKYFALL_SHARE *share, drizzle_st *handle,
+                               drizzle_con_st *conn);
+
+/* closes then frees a connection */
+void skyfall_close_connection(drizzle_con_st *conn);
+
 /* create an array of workers*/
 SKYFALL_WORKER **create_workers(SKYFALL_SHARE *share);
 
