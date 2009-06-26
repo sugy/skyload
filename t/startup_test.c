@@ -9,9 +9,12 @@
 #include "../skyfall.h"
 
 static bool allocation_test(void);
+static bool multi_allocation_test(void);
 
 int main(void) {
   if (allocation_test() == false)  
+    return EXIT_FAILURE;
+  if (multi_allocation_test() == false)
     return EXIT_FAILURE;
 
   return EXIT_SUCCESS;
@@ -46,5 +49,22 @@ static bool allocation_test(void) {
   skyfall_share_free(share);
   skyfall_worker_free(worker);
 
+  return true;
+}
+
+static bool multi_allocation_test(void) {
+  SKYFALL_WORKER **workers;
+  SKYFALL_SHARE *share;
+
+  if ((share = skyfall_share_new()) == NULL)
+    return false;
+
+  share->concurrency = 8;
+
+  if ((workers = create_workers(share)) == NULL)
+    return false;
+
+  destroy_workers(workers);
+  skyfall_share_free(share);
   return true;
 }
