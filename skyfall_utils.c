@@ -121,6 +121,18 @@ uint32_t string_occurrence(const char *haystack, const char *needle) {
   return count;
 }
 
+char *skyfall_tolower(char *string) {
+  assert(string);
+
+  char *pos = string;
+  while(*pos != '\0') {
+    if(*pos >= 'A' && *pos <= 'Z')
+      *pos += 'a' - 'A';
+    pos++;
+  }
+  return string;
+}
+
 void usage() {
   printf("Skyfall: Parameters with '=' requires an argument\n");
   printf("  --server=      : Server Hostname (required)\n");

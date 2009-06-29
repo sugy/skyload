@@ -21,9 +21,12 @@
 
 #include <libdrizzle/drizzle_client.h>
 
-#define SKYFALL_DB_NAME "skyfall"
+#define SKYFALL_DB_NAME   "skyfall"
 #define SKYFALL_DB_CREATE "CREATE DATABASE skyfall"
-#define SKYFALL_DB_DROP "DROP DATABASE IF EXISTS skyfall"
+#define SKYFALL_DB_DROP   "DROP DATABASE IF EXISTS skyfall"
+#define SKYFALL_DB_USE    "USE skyfall"
+
+#define SKYFALL_STRSIZ 1024
 
 /* Object shared among all worker threads. Only add items that
    will not be updated at runtime to this struct  */
@@ -59,6 +62,9 @@ bool check_options(SKYFALL_SHARE *share);
 
 /* checks the number of SQL statement occurrences in the haystack */
 uint32_t string_occurrence(const char *haystack, const char *needle);
+
+/* in-house implementation of tolower(3) for compatibility issues */
+char *skyfall_tolower(char *string);
 
 /* initialize a connection for the given database handle */
 bool skyfall_create_connection(SKYFALL_SHARE *share, drizzle_st *handle,

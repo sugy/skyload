@@ -8,6 +8,21 @@
 
 #include "skyfall.h"
 
+static bool switch_to_skyfall_database(drizzle_con_st *conn) {
+  assert(conn);
+
+  drizzle_return_t ret;
+  drizzle_result_st result;
+
+  drizzle_query_str(conn, &result, SKYFALL_DB_USE, &ret);
+
+  if (ret != DRIZZLE_RETURN_OK) {
+    return false;
+  }
+  drizzle_result_free(&result);
+  return true;
+}
+
 static bool create_skyfall_database(SKYFALL_SHARE *share) {
   assert(share);
 
@@ -30,6 +45,7 @@ static bool create_skyfall_database(SKYFALL_SHARE *share) {
 
   if (ret != DRIZZLE_RETURN_OK) {
     report_error(drizzle_con_error(&connection));
+    drizzle_free(&drizzle);
     return false;
   }
   drizzle_result_free(&result);
@@ -39,6 +55,24 @@ static bool create_skyfall_database(SKYFALL_SHARE *share) {
 
   if (ret != DRIZZLE_RETURN_OK) {
     report_error(drizzle_con_error(&connection));
+    drizzle_free(&drizzle);
+    return false;
+  }
+  drizzle_result_free(&result);
+
+  /* Switch to the database that we want to work in */
+  if (switch_to_skyfall_database(&connection) == false) {
+    report_error(drizzle_con_error(&connection));
+    drizzle_free(&drizzle);
+    return false;
+  }
+
+  /* Create the test table */
+  drizzle_query_str(&connection, &result, share->create_query, &ret);
+
+  if (ret != DRIZZLE_RETURN_OK) {
+    report_error(drizzle_con_error(&connection));
+    drizzle_free(&drizzle);
     return false;
   }
   drizzle_result_free(&result);

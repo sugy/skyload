@@ -9,9 +9,12 @@
 #include "../skyfall.h"
 
 static bool occurrence_test(void);
+static bool lowercase_test(void);
 
 int main(void) {
   if (occurrence_test() == false)
+    return EXIT_FAILURE;
+  if (lowercase_test() == false)
     return EXIT_FAILURE;
 
   return EXIT_SUCCESS;
@@ -43,6 +46,34 @@ static bool occurrence_test(void) {
     return false;
 
   if (string_occurrence(haystack3, "hi\nmy") != 1)
+    return false;
+
+  return true;
+}
+
+static bool lowercase_test(void) {
+  char buf[SKYFALL_STRSIZ];
+
+  const char *ans1 = "a man can be destroyed but not defeated.";
+  const char *ans2 = "there's no one thing that is true. they're all true.";
+  const char *ans3 = "$$$ a ^^^ b *** c (((( d +++ e @@@ f !@_(*][}{g";
+
+  sprintf(buf, "A MAN can BE DESTROYED but NOT defeated.");
+  skyfall_tolower(buf);
+
+  if (strcmp(buf, ans1) != 0)
+    return false;
+
+  sprintf(buf, "TheRe's nO OnE thINg ThAt is TRUE. ThEy're ALL trUe.");
+  skyfall_tolower(buf);
+
+  if (strcmp(buf, ans2) != 0)
+    return false;
+
+  sprintf(buf, "$$$ A ^^^ B *** C (((( D +++ E @@@ F !@_(*][}{G");
+  skyfall_tolower(buf);
+
+  if (strcmp(buf, ans3) != 0)
     return false;
 
   return true;

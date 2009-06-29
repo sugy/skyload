@@ -45,13 +45,12 @@ bool check_options(SKYFALL_SHARE *share) {
   if (share->create_query == NULL) {
     report_error("table creation statement is missing");
     rv = false;
-  }
-
-  /* currently skyfall only supports one table */
-  if (string_occurrence(share->create_query, "CREATE TABLE") > 1 ||
-      string_occurrence(share->create_query, "create table") > 1) {
-    report_error("only one table can be created");
-    rv = false;
+  } else {
+    /* currently skyfall only supports one table */
+    if (string_occurrence(share->create_query, "create table") > 1) {
+      report_error("only one table can be created");
+      rv = false;
+    }
   }
 
   if (share->nwrite <= 0) {
@@ -81,12 +80,14 @@ bool handle_options(SKYFALL_SHARE *share, int argc, char **argv) {
         report_error("out of memory");
         return false;
       }
+      skyfall_tolower(share->create_query);
       break;
     case OPT_SELECT_QUERY:
       if ((share->select_query = strdup(optarg)) == NULL) {
         report_error("out of memory");
         return false;
       }
+      skyfall_tolower(share->select_query);
       break;
     case OPT_PORT:
       share->port = (in_port_t)atoi(optarg);
