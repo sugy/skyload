@@ -47,6 +47,13 @@ bool check_options(SKYFALL_SHARE *share) {
     rv = false;
   }
 
+  /* currently skyfall only supports one table */
+  if (string_occurrence(share->create_query, "CREATE TABLE") > 1 ||
+      string_occurrence(share->create_query, "create table") > 1) {
+    report_error("only one table can be created");
+    rv = false;
+  }
+
   if (share->nwrite <= 0) {
     report_error("--rows must be set to greater than 0");
     rv = false;

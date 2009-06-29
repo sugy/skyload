@@ -109,6 +109,18 @@ void destroy_workers(SKYFALL_WORKER **workers) {
   free(workers);
 }
 
+uint32_t string_occurrence(const char *haystack, const char *needle) {
+  assert(haystack && needle);
+
+  uint32_t count;
+  const char *ptr = haystack;
+
+  for (count = 0; (ptr = strstr(ptr, needle)) != NULL; count++)
+    ptr++;
+
+  return count;
+}
+
 void usage() {
   printf("Skyfall: Parameters with '=' requires an argument\n");
   printf("  --server=      : Server Hostname (required)\n");

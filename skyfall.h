@@ -57,6 +57,9 @@ bool handle_options(SKYFALL_SHARE *share, int argc, char **argv);
 /* checks if the user options make sense */
 bool check_options(SKYFALL_SHARE *share);
 
+/* checks the number of SQL statement occurrences in the haystack */
+uint32_t string_occurrence(const char *haystack, const char *needle);
+
 /* initialize a connection for the given database handle */
 bool skyfall_create_connection(SKYFALL_SHARE *share, drizzle_st *handle,
                                drizzle_con_st *conn);
