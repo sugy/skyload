@@ -114,8 +114,22 @@ static bool drop_skyfall_database(SKYFALL_SHARE *share) {
 
 void *workload(void *arg) {
   assert(arg);
+
   SKYFALL_WORKER *context = (SKYFALL_WORKER *)arg;
-  fprintf(stderr, "I'm your thread! id: %d\n", context->unique_id);
+  drizzle_create(&context->database_handle);
+
+  if (!skyfall_create_connection(context->share, &context->database_handle,
+                                 &context->connection)) {
+    report_error("failed to initialize connection");
+    context->aborted = true;
+    drizzle_free(&context->database_handle);
+    pthread_exit(NULL);
+  }
+
+  fprintf(stderr, "Connection Created. Thread: %d\n", context->unique_id);
+
+  skyfall_close_connection(&context->connection);
+  drizzle_free(&context->database_handle);
   return NULL;
 }
 

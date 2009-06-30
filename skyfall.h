@@ -16,6 +16,7 @@
 #include <string.h>
 #include <pthread.h>
 #include <unistd.h>
+#include <time.h>
 #include <getopt.h>
 #include <assert.h>
 
@@ -49,11 +50,14 @@ typedef struct {
   SKYFALL_SHARE *share;
   pthread_t thread_id;
   drizzle_st database_handle;
+  drizzle_con_st connection;
+  bool aborted;
   uint32_t unique_id;
   uint32_t current_seq_id[SKYFALL_MAX_COLS];
 } SKYFALL_WORKER;
 
-/* allocator and deallocator */
+/* allocator and deallocator. don't add anything more than
+   memory allocation and basic variable initialization */
 SKYFALL_WORKER *skyfall_worker_new(void);
 void skyfall_worker_free(SKYFALL_WORKER *worker);
 
@@ -84,6 +88,9 @@ SKYFALL_WORKER **create_workers(SKYFALL_SHARE *share);
 
 /* free an array of workers*/
 void destroy_workers(SKYFALL_WORKER **workers);
+
+/* calculates time difference in microseconds */
+uint64_t timediff(struct timeval from, struct timeval to);
 
 /* prints the usage of this program */
 void usage(void);

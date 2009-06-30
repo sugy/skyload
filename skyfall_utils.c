@@ -14,6 +14,7 @@ SKYFALL_WORKER *skyfall_worker_new(void) {
   if (worker == NULL) {
     return NULL;
   }
+  worker->aborted = false;
   worker->share = NULL;
   worker->unique_id = 0;
   return worker;
@@ -55,6 +56,9 @@ void skyfall_share_free(SKYFALL_SHARE *share) {
 
   if (share->select_query != NULL)
     free(share->select_query);
+
+  if (share->insert_tmpl != NULL)
+    free(share->insert_tmpl);
 
   free(share);
 }
@@ -133,6 +137,16 @@ char *skyfall_tolower(char *string) {
     pos++;
   }
   return string;
+}
+
+uint64_t timediff(struct timeval from, struct timeval to) {
+  uint64_t us, s = 0;
+
+  us = from.tv_usec - to.tv_usec;
+  if ((s = from.tv_sec - to.tv_sec) > 0) {
+    s *= 1000 * 1000;
+  }
+  return s + us;
 }
 
 void usage() {
