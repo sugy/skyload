@@ -7,6 +7,7 @@
  */
 
 #include "skyfall.h"
+#include "skyfall_generator.h"
 
 static bool switch_to_skyfall_database(drizzle_con_st *conn) {
   assert(conn);
@@ -116,8 +117,8 @@ void *workload(void *arg) {
   assert(arg);
 
   SKYFALL_WORKER *context = (SKYFALL_WORKER *)arg;
-  drizzle_create(&context->database_handle);
 
+  /* Initialize worker specific connection */
   if (!skyfall_create_connection(context->share, &context->database_handle,
                                  &context->connection)) {
     report_error("failed to initialize connection");
@@ -128,8 +129,15 @@ void *workload(void *arg) {
 
   fprintf(stderr, "Connection Created. Thread: %d\n", context->unique_id);
 
+  /* Switch to the test database */
+  if (switch_to_skyfall_database(&context->connection) == false) {
+    report_error(drizzle_con_error(&context->connection));
+    context->aborted = true;
+    drizzle_free(&context->database_handle);
+    pthread_exit(NULL);
+  }
+
   skyfall_close_connection(&context->connection);
-  drizzle_free(&context->database_handle);
   return NULL;
 }
 

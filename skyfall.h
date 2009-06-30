@@ -7,7 +7,7 @@
  */
 
 #ifndef __SKYFALL_H__
-#define __SKYFALL_H_
+#define __SKYFALL_H__
 
 #include <stdio.h>
 #include <stdlib.h>
@@ -31,16 +31,35 @@
 
 #define SKYFALL_MAX_COLS 128
 #define SKYFALL_STRSIZ   1024
+ 
+/* This enumerator helps the query generator decide what
+   kind of test data it should generate for a given column */
+typedef enum {
+  COLUMN_SEQUENTIAL,
+  COLUMN_RANDOM,
+  COLUMN_VARIABLE
+} SKYFALL_COLUMN_TYPE;
+
+/* Singly linked list node to help the query generator. This
+   object belongs in the shared structure (below) and should
+   not be altered at runtime */
+typedef struct _column {
+  SKYFALL_COLUMN_TYPE type; /* Type of the data to generate */
+  struct _column *next;     /* Pointer to the next column if any */
+  size_t length;            /* Length of the data to generate */
+} SKYFALL_COLUMN;
 
 /* Object shared among all worker threads. Only add items that
    will not be updated at runtime to this struct  */
 typedef struct {
-  in_port_t port;
-  char *server;         /* Hostname */
+  SKYFALL_COLUMN *column_list;
+  in_port_t port;       /* DBMS port to talk to */
+  char *server;         /* DBMS Hostname */
   char *create_query;   /* CREATE TABLE query */
   char *select_query;   /* SELECT query */
   char *insert_tmpl;    /* INSERT query template */
   uint16_t protocol;    /* Database protocol */
+  uint16_t columns;     /* Number of columns in the table */
   uint32_t nwrite;      /* Number of rows to INSERT */
   uint32_t nread;       /* Number of times to SELECT */
   uint32_t concurrency; /* Number of concurrent connections */
@@ -88,6 +107,16 @@ SKYFALL_WORKER **create_workers(SKYFALL_SHARE *share);
 
 /* free an array of workers*/
 void destroy_workers(SKYFALL_WORKER **workers);
+
+/* create a node for the column list */
+SKYFALL_COLUMN *skyfall_column_new(void);
+
+/* push a column meta information node to the list */
+bool skyfall_column_push(SKYFALL_COLUMN *head, SKYFALL_COLUMN_TYPE type,
+                         const size_t length);
+
+/* delete the entire column list */
+void skyfall_column_free_all(SKYFALL_COLUMN *head);
 
 /* calculates time difference in microseconds */
 uint64_t timediff(struct timeval from, struct timeval to);

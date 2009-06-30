@@ -34,6 +34,7 @@ SKYFALL_SHARE *skyfall_share_new(void) {
 
   share->server = NULL;
   share->port = DRIZZLE_DEFAULT_PORT;
+  share->column_list = NULL;
   share->create_query = NULL;
   share->select_query = NULL;
   share->insert_tmpl = NULL;
@@ -113,6 +114,64 @@ void destroy_workers(SKYFALL_WORKER **workers) {
     skyfall_worker_free(workers[i]);
   }
   free(workers);
+}
+
+SKYFALL_COLUMN *skyfall_column_new() {
+  SKYFALL_COLUMN *col = malloc(sizeof(*col));
+
+  if (col == NULL)
+    return NULL;
+
+  col->type = COLUMN_RANDOM;
+  col->length = 0;
+  col->next = NULL;
+
+  return col;
+}
+
+void skyfall_column_free_all(SKYFALL_COLUMN *head) {
+  assert(head);
+
+  SKYFALL_COLUMN *current = head;
+  SKYFALL_COLUMN *temp;
+
+  while (current != NULL) {
+    temp = current;
+    current = current->next;
+    free(temp);
+  }
+}
+
+bool skyfall_column_push(SKYFALL_COLUMN *head, SKYFALL_COLUMN_TYPE type,
+                         const size_t length) {
+  SKYFALL_COLUMN *col = skyfall_column_new();
+  SKYFALL_COLUMN *current = NULL;
+  SKYFALL_COLUMN *tail = NULL;
+
+  if (col == NULL)
+    return false;
+
+  col->type = type;
+  col->length = length;
+
+  /* find the tail of the list. for now, don't bother housekeeping
+     the tail for performance enhancement since this list is only
+     created once (at startup) and will not become a hotspot of the
+     entire program. this will be improved in later patches */
+  if (head == NULL) {
+    head = col;
+    return true;
+  }
+
+  current = head;
+
+  do {
+    tail = current;
+    current = current->next;
+  } while (current); 
+
+  tail->next = col;
+  return true;
 }
 
 uint32_t string_occurrence(const char *haystack, const char *needle) {

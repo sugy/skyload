@@ -10,11 +10,14 @@
 
 static bool allocation_test(void);
 static bool multi_allocation_test(void);
+static bool column_list_test(void);
 
 int main(void) {
   if (allocation_test() == false)  
     return EXIT_FAILURE;
   if (multi_allocation_test() == false)
+    return EXIT_FAILURE;
+  if (column_list_test() == false)
     return EXIT_FAILURE;
 
   return EXIT_SUCCESS;
@@ -66,5 +69,40 @@ static bool multi_allocation_test(void) {
 
   destroy_workers(workers);
   skyfall_share_free(share);
+  return true;
+}
+
+static bool column_list_test(void) {
+  SKYFALL_COLUMN *head = skyfall_column_new();
+  SKYFALL_COLUMN *curr = head;
+  uint32_t iterations = 50, i = 0;
+
+  head->type = COLUMN_SEQUENTIAL;
+  head->length = 0;
+
+  for (i = 1; i < iterations; i++) {
+    if (skyfall_column_push(head, COLUMN_SEQUENTIAL, i) == false) {
+      skyfall_column_free_all(head);
+      return false;
+    }
+  }
+
+  i = 0;
+
+  while (curr != NULL) {
+    if (curr->length != i) {
+      skyfall_column_free_all(head);
+      return false;
+    }
+    curr = curr->next;
+    i++;
+  }
+
+  if (iterations != i) {
+    skyfall_column_free_all(head);
+    return false;
+  }
+
+  skyfall_column_free_all(head);
   return true;
 }
