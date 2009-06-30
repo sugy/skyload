@@ -31,6 +31,9 @@ static bool connection_init_test(void) {
   if ((share = skyfall_share_new()) == NULL)
     return false;
 
+  /* set port to something invalid for test purpose */
+  share->port = 0; 
+
   /* this should not return true since the 'share' object does
      not have sufficient information to create a connection
      structure */

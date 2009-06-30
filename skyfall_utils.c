@@ -32,8 +32,10 @@ SKYFALL_SHARE *skyfall_share_new(void) {
   }
 
   share->server = NULL;
+  share->port = DRIZZLE_DEFAULT_PORT;
   share->create_query = NULL;
   share->select_query = NULL;
+  share->insert_tmpl = NULL;
   share->nwrite = 0;
   share->nread = 0;
   share->concurrency = 1;
@@ -139,6 +141,7 @@ void usage() {
   printf("  --port=        : Server Port\n");
   printf("  --table=       : Table Creation Statement (required)\n");
   printf("  --select=      : Select Statement\n");
+  printf("  --insert=      : Insert Statement Template");
   printf("  --concurrency= : Number of simultaneous clients\n");
   printf("  --rows=        : Number of rows to insert into the table\n");
   printf("  --nread=       : Number of SELECT statement(s) to execute\n");

@@ -21,33 +21,39 @@
 
 #include <libdrizzle/drizzle_client.h>
 
+#define DRIZZLE_DEFAULT_PORT 4427
+
 #define SKYFALL_DB_NAME   "skyfall"
 #define SKYFALL_DB_CREATE "CREATE DATABASE skyfall"
 #define SKYFALL_DB_DROP   "DROP DATABASE IF EXISTS skyfall"
 #define SKYFALL_DB_USE    "USE skyfall"
 
-#define SKYFALL_STRSIZ 1024
+#define SKYFALL_MAX_COLS 128
+#define SKYFALL_STRSIZ   1024
 
 /* Object shared among all worker threads. Only add items that
    will not be updated at runtime to this struct  */
 typedef struct {
   in_port_t port;
-  char *server;
-  char *create_query;
-  char *select_query;
-  uint16_t protocol;
-  uint32_t nwrite;
-  uint32_t nread;
-  uint32_t concurrency;
+  char *server;         /* Hostname */
+  char *create_query;   /* CREATE TABLE query */
+  char *select_query;   /* SELECT query */
+  char *insert_tmpl;    /* INSERT query template */
+  uint16_t protocol;    /* Database protocol */
+  uint32_t nwrite;      /* Number of rows to INSERT */
+  uint32_t nread;       /* Number of times to SELECT */
+  uint32_t concurrency; /* Number of concurrent connections */
 } SKYFALL_SHARE;
-
+ 
 typedef struct {
   SKYFALL_SHARE *share;
   pthread_t thread_id;
   drizzle_st database_handle;
   uint32_t unique_id;
+  uint32_t current_seq_id[SKYFALL_MAX_COLS];
 } SKYFALL_WORKER;
 
+/* allocator and deallocator */
 SKYFALL_WORKER *skyfall_worker_new(void);
 void skyfall_worker_free(SKYFALL_WORKER *worker);
 

@@ -14,6 +14,7 @@ typedef enum {
   OPT_SERVER = 's',
   OPT_CREATE_QUERY,
   OPT_SELECT_QUERY,
+  OPT_INSERT_TMPL,
   OPT_NUM_ROWS,
   OPT_CONCURRENCY,
   OPT_NUM_SELECT,
@@ -27,6 +28,7 @@ static struct option longopts[] = {
   {"server", required_argument, NULL, OPT_SERVER},
   {"table", required_argument, NULL, OPT_CREATE_QUERY},
   {"select", required_argument, NULL, OPT_SELECT_QUERY},
+  {"insert", required_argument, NULL, OPT_INSERT_TMPL},
   {"rows", required_argument, NULL, OPT_NUM_ROWS},
   {"concurrency", required_argument, NULL, OPT_CONCURRENCY},
   {"nread", required_argument, NULL, OPT_NUM_SELECT},
@@ -49,6 +51,17 @@ bool check_options(SKYFALL_SHARE *share) {
     /* currently skyfall only supports one table */
     if (string_occurrence(share->create_query, "create table") > 1) {
       report_error("only one table can be created");
+      rv = false;
+    }
+  }
+
+  if (share->insert_tmpl != NULL) {
+    uint32_t ncols = string_occurrence(share->insert_tmpl, "$");
+    if (ncols > SKYFALL_MAX_COLS) {
+      report_error("too many columns");
+      rv = false;
+    } else if (ncols <= 0) {
+      report_error("column placeholder is missing from the INSERT template");
       rv = false;
     }
   }
@@ -88,6 +101,13 @@ bool handle_options(SKYFALL_SHARE *share, int argc, char **argv) {
         return false;
       }
       skyfall_tolower(share->select_query);
+      break;
+    case OPT_INSERT_TMPL:
+      if ((share->insert_tmpl = strdup(optarg)) == NULL) {
+        report_error("out of memory");
+        return false;
+      }
+      skyfall_tolower(share->insert_tmpl);
       break;
     case OPT_PORT:
       share->port = (in_port_t)atoi(optarg);
