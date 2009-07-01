@@ -9,8 +9,15 @@
 #ifndef __SKYFALL_GENERATOR_H__
 #define __SKYFALL_GENERATOR_H__
 
+#include "skyfall.h"
+
+#define PLACEHOLDER_SEQ  "$seq"
+#define PLACEHOLDER_RAND "$rand"
+#define PLACEHOLDER_SEQ_LEN  4
+#define PLACEHOLDER_RAND_LEN 5
+
 /* analyze the given INSERT template query */
-void analyze_insert_template(SKYFALL_SHARE *share);
+SKYFALL_COLUMN_LIST *analyze_insert_template(SKYFALL_SHARE *share);
 
 /* creates the next INSERT query for the given worker object.
    on success, the return value of this function is the length

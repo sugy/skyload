@@ -130,7 +130,8 @@ SKYFALL_COLUMN_LIST *skyfall_column_list_new() {
 }
 
 void skyfall_column_list_free(SKYFALL_COLUMN_LIST *list) {
-  assert(list);
+  if (list == NULL)
+    return;
   skyfall_column_free_all(list);
   free(list);
 }
