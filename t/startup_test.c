@@ -73,25 +73,27 @@ static bool multi_allocation_test(void) {
 }
 
 static bool column_list_test(void) {
-  SKYFALL_COLUMN *head = skyfall_column_new();
-  SKYFALL_COLUMN *curr = head;
-  uint32_t iterations = 50, i = 0;
+  SKYFALL_COLUMN_LIST *list;
+  uint32_t iterations = 50, i;
 
-  head->type = COLUMN_SEQUENTIAL;
-  head->length = 0;
+  list = skyfall_column_list_new();
 
-  for (i = 1; i < iterations; i++) {
-    if (skyfall_column_push(head, COLUMN_SEQUENTIAL, i) == false) {
-      skyfall_column_free_all(head);
+  if (list == NULL)
+    return false;
+
+  for (i = 0; i < iterations; i++) {
+    if (skyfall_column_list_push(list, COLUMN_SEQUENTIAL, i) == false) {
+      skyfall_column_list_free(list);
       return false;
     }
   }
 
   i = 0;
+  SKYFALL_COLUMN_NODE *curr = list->head;
 
   while (curr != NULL) {
     if (curr->length != i) {
-      skyfall_column_free_all(head);
+      skyfall_column_list_free(list);
       return false;
     }
     curr = curr->next;
@@ -99,10 +101,15 @@ static bool column_list_test(void) {
   }
 
   if (iterations != i) {
-    skyfall_column_free_all(head);
+    skyfall_column_list_free(list);
     return false;
   }
 
-  skyfall_column_free_all(head);
+  if (list->size != i) {
+    skyfall_column_list_free(list);
+    return false;
+  }
+
+  skyfall_column_list_free(list);
   return true;
 }

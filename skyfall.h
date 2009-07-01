@@ -47,12 +47,21 @@ typedef struct _column {
   SKYFALL_COLUMN_TYPE type; /* Type of the data to generate */
   struct _column *next;     /* Pointer to the next column if any */
   size_t length;            /* Length of the data to generate */
-} SKYFALL_COLUMN;
+} SKYFALL_COLUMN_NODE;
+
+/* Minimum spec linked list structure for representing table
+   columns. By meaning 'minimum' only push() and free_all()
+   interfaces are provided for this list */
+typedef struct {
+  SKYFALL_COLUMN_NODE *head;
+  SKYFALL_COLUMN_NODE *tail;
+  size_t size;
+} SKYFALL_COLUMN_LIST;
 
 /* Object shared among all worker threads. Only add items that
    will not be updated at runtime to this struct  */
 typedef struct {
-  SKYFALL_COLUMN *column_list;
+  SKYFALL_COLUMN_LIST *column_list;
   in_port_t port;       /* DBMS port to talk to */
   char *server;         /* DBMS Hostname */
   char *create_query;   /* CREATE TABLE query */
@@ -108,15 +117,22 @@ SKYFALL_WORKER **create_workers(SKYFALL_SHARE *share);
 /* free an array of workers*/
 void destroy_workers(SKYFALL_WORKER **workers);
 
+/* create a new column list */
+SKYFALL_COLUMN_LIST *skyfall_column_list_new();
+
+/* free column list */
+void skyfall_column_list_free(SKYFALL_COLUMN_LIST *list);
+
 /* create a node for the column list */
-SKYFALL_COLUMN *skyfall_column_new(void);
+SKYFALL_COLUMN_NODE *skyfall_column_node_new(void);
 
 /* push a column meta information node to the list */
-bool skyfall_column_push(SKYFALL_COLUMN *head, SKYFALL_COLUMN_TYPE type,
-                         const size_t length);
+bool skyfall_column_list_push(SKYFALL_COLUMN_LIST *head,
+                              SKYFALL_COLUMN_TYPE type,
+                              const size_t length);
 
 /* delete the entire column list */
-void skyfall_column_free_all(SKYFALL_COLUMN *head);
+void skyfall_column_free_all(SKYFALL_COLUMN_LIST *list);
 
 /* calculates time difference in microseconds */
 uint64_t timediff(struct timeval from, struct timeval to);

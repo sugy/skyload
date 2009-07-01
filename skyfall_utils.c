@@ -116,8 +116,27 @@ void destroy_workers(SKYFALL_WORKER **workers) {
   free(workers);
 }
 
-SKYFALL_COLUMN *skyfall_column_new() {
-  SKYFALL_COLUMN *col = malloc(sizeof(*col));
+
+SKYFALL_COLUMN_LIST *skyfall_column_list_new() {
+  SKYFALL_COLUMN_LIST *list;
+
+  if ((list = malloc(sizeof(*list))) == NULL)
+    return NULL;
+
+  list->head = NULL;
+  list->tail = NULL;
+  list->size = 0;
+  return list;
+}
+
+void skyfall_column_list_free(SKYFALL_COLUMN_LIST *list) {
+  assert(list);
+  skyfall_column_free_all(list);
+  free(list);
+}
+
+SKYFALL_COLUMN_NODE *skyfall_column_node_new() {
+  SKYFALL_COLUMN_NODE *col = malloc(sizeof(*col));
 
   if (col == NULL)
     return NULL;
@@ -125,15 +144,14 @@ SKYFALL_COLUMN *skyfall_column_new() {
   col->type = COLUMN_RANDOM;
   col->length = 0;
   col->next = NULL;
-
   return col;
 }
 
-void skyfall_column_free_all(SKYFALL_COLUMN *head) {
-  assert(head);
+void skyfall_column_free_all(SKYFALL_COLUMN_LIST *list) {
+  assert(list && list->head);
 
-  SKYFALL_COLUMN *current = head;
-  SKYFALL_COLUMN *temp;
+  SKYFALL_COLUMN_NODE *current = list->head;
+  SKYFALL_COLUMN_NODE *temp;
 
   while (current != NULL) {
     temp = current;
@@ -142,35 +160,28 @@ void skyfall_column_free_all(SKYFALL_COLUMN *head) {
   }
 }
 
-bool skyfall_column_push(SKYFALL_COLUMN *head, SKYFALL_COLUMN_TYPE type,
-                         const size_t length) {
-  SKYFALL_COLUMN *col = skyfall_column_new();
-  SKYFALL_COLUMN *current = NULL;
-  SKYFALL_COLUMN *tail = NULL;
+bool skyfall_column_list_push(SKYFALL_COLUMN_LIST *list,
+                              SKYFALL_COLUMN_TYPE type,
+                              const size_t length) {
+  assert(list);
+
+  SKYFALL_COLUMN_NODE *col = skyfall_column_node_new();
 
   if (col == NULL)
     return false;
 
   col->type = type;
   col->length = length;
+  list->size++;
 
-  /* find the tail of the list. for now, don't bother housekeeping
-     the tail for performance enhancement since this list is only
-     created once (at startup) and will not become a hotspot of the
-     entire program. this will be improved in later patches */
-  if (head == NULL) {
-    head = col;
+  if (list->head == NULL) {
+    list->head = col;
+    list->tail = col;
     return true;
   }
 
-  current = head;
-
-  do {
-    tail = current;
-    current = current->next;
-  } while (current); 
-
-  tail->next = col;
+  list->tail->next = col;
+  list->tail = col;
   return true;
 }
 
