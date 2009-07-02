@@ -93,6 +93,9 @@ SKYFALL_WORKER **create_workers(SKYFALL_SHARE *share) {
   if (workers == NULL)
     return NULL;
 
+  /* seed the random number generator beforehand. */
+  srandom(SKYFALL_RAND_SEED);
+
   for (int i = 0; i < share->concurrency; i++) {
     if ((workers[i] = skyfall_worker_new()) == NULL)
       return NULL;

@@ -56,11 +56,10 @@ bool check_options(SKYFALL_SHARE *share) {
   }
 
   if (share->insert_tmpl != NULL) {
-    uint32_t ncols = string_occurrence(share->insert_tmpl, "$");
-    if (ncols > SKYFALL_MAX_COLS) {
+    if (share->columns > SKYFALL_MAX_COLS) {
       report_error("too many columns");
       rv = false;
-    } else if (ncols <= 0) {
+    } else if (share->columns <= 0) {
       report_error("column placeholder is missing from the INSERT template");
       rv = false;
     }
@@ -108,6 +107,7 @@ bool handle_options(SKYFALL_SHARE *share, int argc, char **argv) {
         return false;
       }
       skyfall_tolower(share->insert_tmpl);
+      share->columns = string_occurrence(share->insert_tmpl, "$");
       break;
     case OPT_PORT:
       share->port = (in_port_t)atoi(optarg);
