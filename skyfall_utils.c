@@ -34,7 +34,6 @@ SKYFALL_SHARE *skyfall_share_new(void) {
 
   share->server = NULL;
   share->port = DRIZZLE_DEFAULT_PORT;
-  share->column_list = NULL;
   share->create_query = NULL;
   share->select_query = NULL;
   share->insert_tmpl = NULL;
@@ -117,76 +116,6 @@ void destroy_workers(SKYFALL_WORKER **workers) {
     skyfall_worker_free(workers[i]);
   }
   free(workers);
-}
-
-
-SKYFALL_COLUMN_LIST *skyfall_column_list_new() {
-  SKYFALL_COLUMN_LIST *list;
-
-  if ((list = malloc(sizeof(*list))) == NULL)
-    return NULL;
-
-  list->head = NULL;
-  list->tail = NULL;
-  list->size = 0;
-  return list;
-}
-
-void skyfall_column_list_free(SKYFALL_COLUMN_LIST *list) {
-  if (list == NULL)
-    return;
-  skyfall_column_free_all(list);
-  free(list);
-}
-
-SKYFALL_COLUMN_NODE *skyfall_column_node_new() {
-  SKYFALL_COLUMN_NODE *col = malloc(sizeof(*col));
-
-  if (col == NULL)
-    return NULL;
-
-  col->type = COLUMN_RANDOM;
-  col->length = 0;
-  col->next = NULL;
-  return col;
-}
-
-void skyfall_column_free_all(SKYFALL_COLUMN_LIST *list) {
-  assert(list && list->head);
-
-  SKYFALL_COLUMN_NODE *current = list->head;
-  SKYFALL_COLUMN_NODE *temp;
-
-  while (current != NULL) {
-    temp = current;
-    current = current->next;
-    free(temp);
-  }
-}
-
-bool skyfall_column_list_push(SKYFALL_COLUMN_LIST *list,
-                              SKYFALL_COLUMN_TYPE type,
-                              const size_t length) {
-  assert(list);
-
-  SKYFALL_COLUMN_NODE *col = skyfall_column_node_new();
-
-  if (col == NULL)
-    return false;
-
-  col->type = type;
-  col->length = length;
-  list->size++;
-
-  if (list->head == NULL) {
-    list->head = col;
-    list->tail = col;
-    return true;
-  }
-
-  list->tail->next = col;
-  list->tail = col;
-  return true;
 }
 
 uint32_t string_occurrence(const char *haystack, const char *needle) {
