@@ -10,8 +10,7 @@
 
 static uint32_t next_id(SKY_WORKER *worker, uint32_t col_num) {
   assert(worker);
-  uint32_t delta = worker->unique_id + worker->share->concurrency;
-  return worker->current_seq_id[col_num] += delta;
+  return worker->current_seq_id[col_num] += worker->share->concurrency;
 }
 
 size_t next_insert_query(SKY_WORKER *worker, char *buffer, size_t buflen) {

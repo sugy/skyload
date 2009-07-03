@@ -117,6 +117,9 @@ void *workload(void *arg) {
   assert(arg);
 
   SKY_WORKER *context = (SKY_WORKER *)arg;
+  char query_buf[SKY_STRSIZ];
+  drizzle_result_st result;
+  drizzle_return_t ret;
 
   /* Initialize worker specific connection */
   if (!sky_create_connection(context->share, &context->database_handle,
@@ -127,7 +130,7 @@ void *workload(void *arg) {
     pthread_exit(NULL);
   }
 
-  fprintf(stderr, "Connection Created. Thread: %d\n", context->unique_id);
+  fprintf(stderr, "Worker[%d]: Connection Created.\n", context->unique_id);
 
   /* Switch to the test database */
   if (switch_to_skyload_database(&context->connection) == false) {
@@ -137,6 +140,50 @@ void *workload(void *arg) {
     pthread_exit(NULL);
   }
 
+  /* Generate and insert queries if specified */
+  for (int i = 0; i < context->share->nwrite; i++) {
+    size_t qlen = next_insert_query(context, query_buf, SKY_STRSIZ);
+
+    if (qlen <= 0) {
+      fprintf(stderr, "thread[%d] invalid INSERT template\n",
+              context->unique_id);
+      sky_close_connection(&context->connection);      
+      context->aborted = true;
+      return NULL;
+    }
+
+    /* Attempt to insert the generated INSERT query */
+    drizzle_query_str(&context->connection, &result, query_buf, &ret);
+
+    if (ret != DRIZZLE_RETURN_OK) {
+      fprintf(stderr, "thread[%d] error: %s\n",
+              context->unique_id, drizzle_con_error(&context->connection));
+      context->aborted = true;
+      sky_close_connection(&context->connection);
+      return NULL;
+    }
+    drizzle_result_free(&result);
+
+    /* Print the progress of the first worker thread so we can give
+       some feedback to the user. Progress feedback for all worker
+       threads in a single feed would be nice but this requires
+       atomic increment or use of mutex which can potentially reduce
+       the effectiveness of the load test. */
+    if (context->unique_id == 1) {
+      if (context->share->nwrite > 25) {
+        if(((i + 1) % 25) == 0) {
+          putchar('.');
+          fflush(stdout);
+        }
+        if (((i + 1) % 1000) == 0)
+          fprintf(stdout, " (%d)\n", i + 1);
+      }
+      if (context->share->nwrite < 1000 &&
+          i == context->share->nwrite - 1) {
+        fprintf(stdout, " (%d)\n", i + 1);
+      }
+    }
+  }
   sky_close_connection(&context->connection);
   return NULL;
 }

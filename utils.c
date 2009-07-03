@@ -103,6 +103,9 @@ SKY_WORKER **create_workers(SKY_SHARE *share) {
     drizzle_create(&workers[i]->database_handle);
     workers[i]->share = share;
     workers[i]->unique_id = i + 1;
+
+    for (int j = 0; j < SKY_MAX_COLS; j++)
+      workers[i]->current_seq_id[j] = workers[i]->unique_id;
   }
   return workers;
 }

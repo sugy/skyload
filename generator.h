@@ -11,8 +11,8 @@
 
 #include "skyload.h"
 
-#define PLACEHOLDER_SEQ  "$seq"
-#define PLACEHOLDER_RAND "$rand"
+#define PLACEHOLDER_SEQ  "%seq"
+#define PLACEHOLDER_RAND "%rand"
 #define PLACEHOLDER_SEQ_LEN  4
 #define PLACEHOLDER_RAND_LEN 5
 
