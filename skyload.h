@@ -43,6 +43,7 @@ typedef struct {
   char *create_query;   /* CREATE TABLE query */
   char *select_query;   /* SELECT query */
   char *insert_tmpl;    /* INSERT query template */
+  bool keep_db;         /* Whether to drop the test database or not */
   uint16_t protocol;    /* Database protocol */
   uint16_t columns;     /* Number of columns in the table */
   uint32_t nwrite;      /* Number of rows to INSERT */

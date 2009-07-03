@@ -195,9 +195,11 @@ int main(int argc, char **argv) {
     }
   }
 
-  /* skyload is done, drop the database */
-  if (drop_skyload_database(share) == false)
-    return EXIT_FAILURE;
+  /* skyload is done, drop the database unless specified not to */
+  if (share->keep_db == false) {
+    if (drop_skyload_database(share) == false)
+      return EXIT_FAILURE;
+  }
 
   destroy_workers(workers);
   sky_share_free(share);

@@ -18,11 +18,13 @@ typedef enum {
   OPT_NUM_ROWS,
   OPT_CONCURRENCY,
   OPT_NUM_SELECT,
+  OPT_KEEP_DB,
   OPT_MYSQL_PROT
 } sky_options;
 
 static struct option longopts[] = {
   {"help", no_argument, NULL, OPT_HELP},
+  {"keep", no_argument, NULL, OPT_KEEP_DB},
   {"mysql", no_argument, NULL, OPT_MYSQL_PROT},
   {"port", required_argument, NULL, OPT_PORT},
   {"server", required_argument, NULL, OPT_SERVER},
@@ -107,7 +109,7 @@ bool handle_options(SKY_SHARE *share, int argc, char **argv) {
         return false;
       }
       sky_tolower(share->insert_tmpl);
-      share->columns = string_occurrence(share->insert_tmpl, "$");
+      share->columns = string_occurrence(share->insert_tmpl, "%");
       break;
     case OPT_PORT:
       share->port = (in_port_t)atoi(optarg);
@@ -124,6 +126,12 @@ bool handle_options(SKY_SHARE *share, int argc, char **argv) {
       break;
     case OPT_MYSQL_PROT:
       share->protocol = DRIZZLE_CON_MYSQL;
+      break;
+    case OPT_KEEP_DB:
+      share->keep_db = true;
+      break;
+    default:
+      usage();
       break;
     }
   }

@@ -37,6 +37,7 @@ SKY_SHARE *sky_share_new(void) {
   share->create_query = NULL;
   share->select_query = NULL;
   share->insert_tmpl = NULL;
+  share->keep_db = false;
   share->nwrite = 0;
   share->nread = 0;
   share->concurrency = 1;
@@ -157,11 +158,10 @@ void usage() {
   printf("  --server=      : Server Hostname (required)\n");
   printf("  --port=        : Server Port\n");
   printf("  --table=       : Table Creation Statement (required)\n");
-  printf("  --select=      : Select Statement\n");
   printf("  --insert=      : Insert Statement Template");
   printf("  --concurrency= : Number of simultaneous clients\n");
   printf("  --rows=        : Number of rows to insert into the table\n");
-  printf("  --nread=       : Number of SELECT statement(s) to execute\n");
+  printf("  --keep         : Don't delete the database after the test\n");
   printf("  --mysql        : Use MySQL Protocol\n");
   printf("  --help         : Print this help\n");
   exit(EXIT_SUCCESS);
