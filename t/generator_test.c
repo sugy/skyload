@@ -6,7 +6,7 @@
  * BSD license. See the COPYING file for full text.
  */
 
-#include "../skyfall_generator.h"
+#include "../generator.h"
 
 int main(void) {
   return EXIT_SUCCESS;

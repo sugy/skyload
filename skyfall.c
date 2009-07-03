@@ -7,7 +7,7 @@
  */
 
 #include "skyfall.h"
-#include "skyfall_generator.h"
+#include "generator.h"
 
 static bool switch_to_skyfall_database(drizzle_con_st *conn) {
   assert(conn);

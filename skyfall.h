@@ -29,6 +29,8 @@
 #define SKYFALL_DB_DROP   "DROP DATABASE IF EXISTS skyfall"
 #define SKYFALL_DB_USE    "USE skyfall"
 
+#define SKYFALL_PLACEHOLDER_SYM '%'
+
 #define SKYFALL_MAX_COLS  128
 #define SKYFALL_STRSIZ    1024
 #define SKYFALL_RAND_SEED 149

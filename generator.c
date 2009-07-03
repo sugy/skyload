@@ -6,7 +6,7 @@
  * BSD license. See the COPYING file for full text.
  */
 
-#include "skyfall_generator.h"
+#include "generator.h"
 
 static uint32_t next_id(SKYFALL_WORKER *worker, uint32_t col_num) {
   assert(worker);
@@ -21,7 +21,7 @@ size_t next_insert_query(SKYFALL_WORKER *worker, char *buffer,
 
   /* copy everything up to the values. e.g. 'INSERT INTO t1 VALUES (' */
   write_ptr = buffer;
-  pos = strchr(worker->share->insert_tmpl, '$');
+  pos = strchr(worker->share->insert_tmpl, SKYFALL_PLACEHOLDER_SYM);
   query_length = 0;
 
   if (pos == NULL)
@@ -44,7 +44,7 @@ size_t next_insert_query(SKYFALL_WORKER *worker, char *buffer,
 
   /* now we look for placeholders and generate values for it */
   for (int i = 0; i < worker->share->columns; i++) {
-    pos = strchr(pos, '$');
+    pos = strchr(pos, SKYFALL_PLACEHOLDER_SYM);
 
     if (pos == NULL) {
       report_error("invalid INSERT query template");
