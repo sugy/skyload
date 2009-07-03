@@ -19,6 +19,7 @@
 #include <time.h>
 #include <getopt.h>
 #include <assert.h>
+#include <sys/time.h> 
 
 #include <libdrizzle/drizzle_client.h>
 
@@ -59,6 +60,7 @@ typedef struct {
   bool aborted;
   uint32_t unique_id;
   uint32_t current_seq_id[SKY_MAX_COLS];
+  uint64_t total_insert_time;
 } SKY_WORKER;
 
 /* allocator and deallocator. don't add anything more than
@@ -96,6 +98,9 @@ void destroy_workers(SKY_WORKER **workers);
 
 /* calculates time difference in microseconds */
 uint64_t timediff(struct timeval from, struct timeval to);
+
+/* Aggregate and print the benchmark result held by all workers */ 
+void aggregate_worker_result(SKY_WORKER **workers);
 
 /* prints the usage of this program */
 void usage(void);

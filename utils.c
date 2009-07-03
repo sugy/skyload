@@ -17,6 +17,7 @@ SKY_WORKER *sky_worker_new(void) {
   worker->aborted = false;
   worker->share = NULL;
   worker->unique_id = 0;
+  worker->total_insert_time = 0;
   return worker;
 }
 
@@ -156,12 +157,30 @@ uint64_t timediff(struct timeval from, struct timeval to) {
   return s + us;
 }
 
+void aggregate_worker_result(SKY_WORKER **workers) {
+  double data_load_time = 0;
+
+  for (int i = 0; i < workers[0]->share->concurrency; i++) {
+    if (workers[i]->aborted)
+      continue;
+
+    data_load_time += workers[i]->total_insert_time;
+    data_load_time /= 1000000;
+  }
+
+  printf("\n");
+  printf("Concurrent Workers  : %d\n", workers[0]->share->concurrency);
+  printf("Total INSERT time   : %.5lf secs\n", data_load_time);
+  printf("Total rows inserted : %d\n",
+         workers[0]->share->concurrency * workers[0]->share->nwrite);
+}
+
 void usage() {
   printf("Skyfall: Parameters with '=' requires an argument\n");
   printf("  --server=      : Server Hostname (required)\n");
   printf("  --port=        : Server Port\n");
   printf("  --table=       : Table Creation Statement (required)\n");
-  printf("  --insert=      : Insert Statement Template");
+  printf("  --insert=      : Insert Statement Template\n");
   printf("  --concurrency= : Number of simultaneous clients\n");
   printf("  --rows=        : Number of rows to insert into the table\n");
   printf("  --keep         : Don't delete the database after the test\n");

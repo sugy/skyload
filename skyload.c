@@ -118,6 +118,8 @@ void *workload(void *arg) {
 
   SKY_WORKER *context = (SKY_WORKER *)arg;
   char query_buf[SKY_STRSIZ];
+  struct timeval start_time;
+  struct timeval end_time;
   drizzle_result_st result;
   drizzle_return_t ret;
 
@@ -153,6 +155,7 @@ void *workload(void *arg) {
     }
 
     /* Attempt to insert the generated INSERT query */
+    gettimeofday(&start_time, NULL);
     drizzle_query_str(&context->connection, &result, query_buf, &ret);
 
     if (ret != DRIZZLE_RETURN_OK) {
@@ -163,6 +166,11 @@ void *workload(void *arg) {
       return NULL;
     }
     drizzle_result_free(&result);
+
+    /* accumulate the time it took to execute this query for later
+       aggregation by the main thread */
+    gettimeofday(&end_time, NULL);
+    context->total_insert_time += timediff(end_time, start_time);
 
     /* Print the progress of the first worker thread so we can give
        some feedback to the user. Progress feedback for all worker
@@ -241,6 +249,9 @@ int main(int argc, char **argv) {
       return EXIT_FAILURE;
     }
   }
+
+  /* Aggregate and print the benchmark result held by all workers */ 
+  aggregate_worker_result(workers);
 
   /* skyload is done, drop the database unless specified not to */
   if (share->keep_db == false) {
