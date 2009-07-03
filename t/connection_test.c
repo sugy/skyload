@@ -6,7 +6,7 @@
  * BSD license. See the COPYING file for full text.
  */
 
-#include "../skyfall.h"
+#include "../skyload.h"
 
 static bool connection_init_test(void);
 
@@ -18,7 +18,7 @@ int main(void) {
 }
 
 static bool connection_init_test(void) {
-  SKYFALL_SHARE *share;
+  SKY_SHARE *share;
   drizzle_st drizzle;
   drizzle_con_st connection;
   bool rv;
@@ -28,7 +28,7 @@ static bool connection_init_test(void) {
   if (&drizzle == NULL)
     return false;
 
-  if ((share = skyfall_share_new()) == NULL)
+  if ((share = sky_share_new()) == NULL)
     return false;
 
   /* set port to something invalid for test purpose */
@@ -37,7 +37,7 @@ static bool connection_init_test(void) {
   /* this should not return true since the 'share' object does
      not have sufficient information to create a connection
      structure */
-  rv = skyfall_create_connection(share, &drizzle, &connection);
+  rv = sky_create_connection(share, &drizzle, &connection);
 
   if (rv) {
     drizzle_free(&drizzle);
@@ -49,7 +49,7 @@ static bool connection_init_test(void) {
 
   /* this should still fail since the hostname by itself
      is not sufficient to create a connection structure */
-  rv = skyfall_create_connection(share, &drizzle, &connection);
+  rv = sky_create_connection(share, &drizzle, &connection);
 
   if (rv) {
     drizzle_free(&drizzle);
@@ -59,16 +59,16 @@ static bool connection_init_test(void) {
   share->port = (in_port_t)4427; 
 
   /* there is enough information now so rv should be set to true */
-  rv = skyfall_create_connection(share, &drizzle, &connection);
+  rv = sky_create_connection(share, &drizzle, &connection);
 
   if (rv == false) {
     drizzle_free(&drizzle);
     return false;
   }
 
-  skyfall_close_connection(&connection);
+  sky_close_connection(&connection);
 
   drizzle_free(&drizzle);
-  skyfall_share_free(share);
+  sky_share_free(share);
   return true;
 }

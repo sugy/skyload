@@ -6,7 +6,7 @@
  * BSD license. See the COPYING file for full text.
  */
 
-#include "skyfall.h"
+#include "skyload.h"
 
 typedef enum {
   OPT_HELP = 'h',
@@ -19,7 +19,7 @@ typedef enum {
   OPT_CONCURRENCY,
   OPT_NUM_SELECT,
   OPT_MYSQL_PROT
-} skyfall_options;
+} sky_options;
 
 static struct option longopts[] = {
   {"help", no_argument, NULL, OPT_HELP},
@@ -35,7 +35,7 @@ static struct option longopts[] = {
   {0, 0, 0, 0}
 };
 
-bool check_options(SKYFALL_SHARE *share) {
+bool check_options(SKY_SHARE *share) {
   assert(share);
   bool rv = true;
 
@@ -48,7 +48,7 @@ bool check_options(SKYFALL_SHARE *share) {
     report_error("table creation statement is missing");
     rv = false;
   } else {
-    /* currently skyfall only supports one table */
+    /* currently skyload only supports one table */
     if (string_occurrence(share->create_query, "create table") > 1) {
       report_error("only one table can be created");
       rv = false;
@@ -56,7 +56,7 @@ bool check_options(SKYFALL_SHARE *share) {
   }
 
   if (share->insert_tmpl != NULL) {
-    if (share->columns > SKYFALL_MAX_COLS) {
+    if (share->columns > SKY_MAX_COLS) {
       report_error("too many columns");
       rv = false;
     } else if (share->columns <= 0) {
@@ -72,7 +72,7 @@ bool check_options(SKYFALL_SHARE *share) {
   return rv;
 }
 
-bool handle_options(SKYFALL_SHARE *share, int argc, char **argv) {
+bool handle_options(SKY_SHARE *share, int argc, char **argv) {
   assert(share);
   int ch, temp;
 
@@ -92,21 +92,21 @@ bool handle_options(SKYFALL_SHARE *share, int argc, char **argv) {
         report_error("out of memory");
         return false;
       }
-      skyfall_tolower(share->create_query);
+      sky_tolower(share->create_query);
       break;
     case OPT_SELECT_QUERY:
       if ((share->select_query = strdup(optarg)) == NULL) {
         report_error("out of memory");
         return false;
       }
-      skyfall_tolower(share->select_query);
+      sky_tolower(share->select_query);
       break;
     case OPT_INSERT_TMPL:
       if ((share->insert_tmpl = strdup(optarg)) == NULL) {
         report_error("out of memory");
         return false;
       }
-      skyfall_tolower(share->insert_tmpl);
+      sky_tolower(share->insert_tmpl);
       share->columns = string_occurrence(share->insert_tmpl, "$");
       break;
     case OPT_PORT:

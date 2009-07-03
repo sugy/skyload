@@ -8,20 +8,19 @@
 
 #include "generator.h"
 
-static uint32_t next_id(SKYFALL_WORKER *worker, uint32_t col_num) {
+static uint32_t next_id(SKY_WORKER *worker, uint32_t col_num) {
   assert(worker);
   uint32_t delta = worker->unique_id + worker->share->concurrency;
   return worker->current_seq_id[col_num] += delta;
 }
 
-size_t next_insert_query(SKYFALL_WORKER *worker, char *buffer,
-                         size_t buflen) {
+size_t next_insert_query(SKY_WORKER *worker, char *buffer, size_t buflen) {
   size_t query_length;  
   char *pos, *write_ptr;
 
   /* copy everything up to the values. e.g. 'INSERT INTO t1 VALUES (' */
   write_ptr = buffer;
-  pos = strchr(worker->share->insert_tmpl, SKYFALL_PLACEHOLDER_SYM);
+  pos = strchr(worker->share->insert_tmpl, SKY_PLACEHOLDER_SYM);
   query_length = 0;
 
   if (pos == NULL)
@@ -30,7 +29,7 @@ size_t next_insert_query(SKYFALL_WORKER *worker, char *buffer,
   size_t temp = pos - worker->share->insert_tmpl;
   size_t free_space = buflen - temp;
 
-  if (temp > SKYFALL_STRSIZ) {
+  if (temp > SKY_STRSIZ) {
     report_error("supplied INSERT query template is too long");
     return 0;
   }
@@ -44,7 +43,7 @@ size_t next_insert_query(SKYFALL_WORKER *worker, char *buffer,
 
   /* now we look for placeholders and generate values for it */
   for (int i = 0; i < worker->share->columns; i++) {
-    pos = strchr(pos, SKYFALL_PLACEHOLDER_SYM);
+    pos = strchr(pos, SKY_PLACEHOLDER_SYM);
 
     if (pos == NULL) {
       report_error("invalid INSERT query template");

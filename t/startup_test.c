@@ -6,7 +6,7 @@
  * BSD license. See the COPYING file for full text.
  */
 
-#include "../skyfall.h"
+#include "../skyload.h"
 
 static bool allocation_test(void);
 static bool multi_allocation_test(void);
@@ -21,14 +21,14 @@ int main(void) {
 }
 
 static bool allocation_test(void) {
-  SKYFALL_WORKER *worker;
-  SKYFALL_SHARE *share;
+  SKY_WORKER *worker;
+  SKY_SHARE *share;
 
   /* test allocator */
-  if ((worker = skyfall_worker_new()) == NULL)
+  if ((worker = sky_worker_new()) == NULL)
     return false;
 
-  if ((share = skyfall_share_new()) == NULL)
+  if ((share = sky_share_new()) == NULL)
     return false;
   
   /* test the deallocator. deliberatly free the allocated members
@@ -46,17 +46,17 @@ static bool allocation_test(void) {
   share->select_query = NULL; 
   
   /* if this screws up, it will kill the test program */
-  skyfall_share_free(share);
-  skyfall_worker_free(worker);
+  sky_share_free(share);
+  sky_worker_free(worker);
 
   return true;
 }
 
 static bool multi_allocation_test(void) {
-  SKYFALL_WORKER **workers;
-  SKYFALL_SHARE *share;
+  SKY_WORKER **workers;
+  SKY_SHARE *share;
 
-  if ((share = skyfall_share_new()) == NULL)
+  if ((share = sky_share_new()) == NULL)
     return false;
 
   share->concurrency = 8;
@@ -65,6 +65,6 @@ static bool multi_allocation_test(void) {
     return false;
 
   destroy_workers(workers);
-  skyfall_share_free(share);
+  sky_share_free(share);
   return true;
 }

@@ -6,7 +6,7 @@
  * BSD license. See the COPYING file for full text.
  */
 
-#include "../skyfall.h"
+#include "../skyload.h"
 
 static bool occurrence_test(void);
 static bool lowercase_test(void);
@@ -40,7 +40,7 @@ static bool occurrence_test(void) {
   if (string_occurrence(haystack2, "CREATE") != 1)
     return false;
 
-  const char *haystack3 = "hi\nmy\nname\nis\nskyfall\n";
+  const char *haystack3 = "hi\nmy\nname\nis\nskyload\n";
 
   if (string_occurrence(haystack3, "hi my") > 0)
     return false;
@@ -52,26 +52,26 @@ static bool occurrence_test(void) {
 }
 
 static bool lowercase_test(void) {
-  char buf[SKYFALL_STRSIZ];
+  char buf[SKY_STRSIZ];
 
   const char *ans1 = "a man can be destroyed but not defeated.";
   const char *ans2 = "there's no one thing that is true. they're all true.";
   const char *ans3 = "$$$ a ^^^ b *** c (((( d +++ e @@@ f !@_(*][}{g";
 
   sprintf(buf, "A MAN can BE DESTROYED but NOT defeated.");
-  skyfall_tolower(buf);
+  sky_tolower(buf);
 
   if (strcmp(buf, ans1) != 0)
     return false;
 
   sprintf(buf, "TheRe's nO OnE thINg ThAt is TRUE. ThEy're ALL trUe.");
-  skyfall_tolower(buf);
+  sky_tolower(buf);
 
   if (strcmp(buf, ans2) != 0)
     return false;
 
   sprintf(buf, "$$$ A ^^^ B *** C (((( D +++ E @@@ F !@_(*][}{G");
-  skyfall_tolower(buf);
+  sky_tolower(buf);
 
   if (strcmp(buf, ans3) != 0)
     return false;

@@ -6,10 +6,10 @@
  * BSD license. See the COPYING file for full text.
  */
 
-#include "skyfall.h"
+#include "skyload.h"
 
-SKYFALL_WORKER *skyfall_worker_new(void) {
-  SKYFALL_WORKER *worker = malloc(sizeof(*worker));
+SKY_WORKER *sky_worker_new(void) {
+  SKY_WORKER *worker = malloc(sizeof(*worker));
 
   if (worker == NULL) {
     return NULL;
@@ -20,13 +20,13 @@ SKYFALL_WORKER *skyfall_worker_new(void) {
   return worker;
 }
 
-void skyfall_worker_free(SKYFALL_WORKER *worker) {
+void sky_worker_free(SKY_WORKER *worker) {
   if (worker != NULL)
     free(worker);
 }
 
-SKYFALL_SHARE *skyfall_share_new(void) {
-  SKYFALL_SHARE *share = malloc(sizeof(*share));
+SKY_SHARE *sky_share_new(void) {
+  SKY_SHARE *share = malloc(sizeof(*share));
 
   if (share == NULL) {
     return NULL;
@@ -45,7 +45,7 @@ SKYFALL_SHARE *skyfall_share_new(void) {
   return share;
 }
 
-void skyfall_share_free(SKYFALL_SHARE *share) {
+void sky_share_free(SKY_SHARE *share) {
   assert(share);
 
   if (share->server != NULL)
@@ -63,7 +63,7 @@ void skyfall_share_free(SKYFALL_SHARE *share) {
   free(share);
 }
 
-bool skyfall_create_connection(SKYFALL_SHARE *share, drizzle_st *handle,
+bool sky_create_connection(SKY_SHARE *share, drizzle_st *handle,
                                drizzle_con_st *conn) {
   assert(share && handle);
 
@@ -78,25 +78,25 @@ bool skyfall_create_connection(SKYFALL_SHARE *share, drizzle_st *handle,
   return true;
 }
 
-void skyfall_close_connection(drizzle_con_st *conn) {
+void sky_close_connection(drizzle_con_st *conn) {
   assert(conn);
   drizzle_con_close(conn);
   drizzle_con_free(conn);
 }
 
-SKYFALL_WORKER **create_workers(SKYFALL_SHARE *share) {
+SKY_WORKER **create_workers(SKY_SHARE *share) {
   assert(share && share->concurrency > 0);
 
-  SKYFALL_WORKER **workers = malloc(sizeof(SKYFALL_WORKER *)
-                                    * share->concurrency);
+  SKY_WORKER **workers = malloc(sizeof(SKY_WORKER *) * share->concurrency);
+
   if (workers == NULL)
     return NULL;
 
   /* seed the random number generator beforehand. */
-  srandom(SKYFALL_RAND_SEED);
+  srandom(SKY_RAND_SEED);
 
   for (int i = 0; i < share->concurrency; i++) {
-    if ((workers[i] = skyfall_worker_new()) == NULL)
+    if ((workers[i] = sky_worker_new()) == NULL)
       return NULL;
 
     drizzle_create(&workers[i]->database_handle);
@@ -106,14 +106,14 @@ SKYFALL_WORKER **create_workers(SKYFALL_SHARE *share) {
   return workers;
 }
 
-void destroy_workers(SKYFALL_WORKER **workers) {
+void destroy_workers(SKY_WORKER **workers) {
   assert(workers);
 
   uint32_t nworkers = workers[0]->share->concurrency;
 
   for (int i = 0; i < nworkers; i++) {
     drizzle_free(&workers[i]->database_handle);
-    skyfall_worker_free(workers[i]);
+    sky_worker_free(workers[i]);
   }
   free(workers);
 }
@@ -130,7 +130,7 @@ uint32_t string_occurrence(const char *haystack, const char *needle) {
   return count;
 }
 
-char *skyfall_tolower(char *string) {
+char *sky_tolower(char *string) {
   assert(string);
 
   char *pos = string;
@@ -168,5 +168,5 @@ void usage() {
 }
 
 void report_error(const char *error) {
-  fprintf(stderr, "skyfall error: %s\n", error);
+  fprintf(stderr, "skyload error: %s\n", error);
 }

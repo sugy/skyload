@@ -9,7 +9,7 @@
 #ifndef __SKYFALL_GENERATOR_H__
 #define __SKYFALL_GENERATOR_H__
 
-#include "skyfall.h"
+#include "skyload.h"
 
 #define PLACEHOLDER_SEQ  "$seq"
 #define PLACEHOLDER_RAND "$rand"
@@ -21,7 +21,6 @@
 /* creates the next INSERT query for the given worker object.
    on success, the return value of this function is the length
    of the generated query and 0 on failure */
-size_t next_insert_query(SKYFALL_WORKER *worker, char *buffer,
-                         size_t buflen);
+size_t next_insert_query(SKY_WORKER *worker, char *buffer, size_t buflen);
 
 #endif

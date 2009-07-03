@@ -2,13 +2,13 @@ AUTOMAKE_OPTIONS = foreign
 ACLOCAL_AMFLAGS = -I m4
 SUBDIRS = t
 
-bin_PROGRAMS = skyfall 
+bin_PROGRAMS = skyload
 
-skyfall_SOURCES = \
-	skyfall.c \
+skyload_SOURCES = \
+	skyload.c \
 	utils.c \
 	options.c \
 	generator.c
 
-skyfall_CFLAGS  = $(AM_CFLAGS) -Wall
-skyfall_LDFLAGS = $(LIBDRIZZLE) -lpthread
+skyload_CFLAGS  = $(AM_CFLAGS) -Wall
+skyload_LDFLAGS = $(LIBDRIZZLE) -lpthread
