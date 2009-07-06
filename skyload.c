@@ -216,6 +216,14 @@ int main(int argc, char **argv) {
   if (check_options(share) == false)
     return EXIT_FAILURE;
 
+  /* Use the appropriate port if unspecified */
+  if (share->port == 0) {
+    if (share->protocol == DRIZZLE_CON_MYSQL)
+      share->port = MYSQL_DEFAULT_PORT;
+    else
+      share->port = DRIZZLE_DEFAULT_PORT;
+  }
+
   /* Create worker object(s) */
   if ((workers = create_workers(share)) == NULL) {
     report_error("out of memory");

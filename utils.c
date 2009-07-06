@@ -34,11 +34,11 @@ SKY_SHARE *sky_share_new(void) {
   }
 
   share->server = NULL;
-  share->port = DRIZZLE_DEFAULT_PORT;
   share->create_query = NULL;
   share->select_query = NULL;
   share->insert_tmpl = NULL;
   share->keep_db = false;
+  share->port = 0;
   share->nwrite = 0;
   share->nread = 0;
   share->concurrency = 1;

@@ -24,6 +24,7 @@
 #include <libdrizzle/drizzle_client.h>
 
 #define DRIZZLE_DEFAULT_PORT 4427
+#define MYSQL_DEFAULT_PORT 3306
 
 #define SKY_DB_NAME   "skyload"
 #define SKY_DB_CREATE "CREATE DATABASE skyload"

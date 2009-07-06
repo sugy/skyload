@@ -10,5 +10,9 @@ skyload_SOURCES = \
 	options.c \
 	generator.c
 
+noinst_HEADERS= \
+	skyload.h \
+	generator.h
+
 skyload_CFLAGS  = $(AM_CFLAGS) -Wall
 skyload_LDFLAGS = $(LIBDRIZZLE) -lpthread
