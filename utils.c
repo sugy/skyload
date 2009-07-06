@@ -157,22 +157,40 @@ uint64_t timediff(struct timeval from, struct timeval to) {
   return s + us;
 }
 
+uint32_t rows_to_write(SKY_WORKER *worker){
+  assert(worker);
+
+  uint32_t count = worker->share->nwrite / worker->share->concurrency;
+
+  if (worker->unique_id == worker->share->concurrency)
+    count += worker->share->nwrite % worker->share->concurrency;
+
+  return count;
+}
+
 void aggregate_worker_result(SKY_WORKER **workers) {
   double data_load_time = 0;
+  bool aborted = false;
 
   for (int i = 0; i < workers[0]->share->concurrency; i++) {
-    if (workers[i]->aborted)
-      continue;
+    if (workers[i]->aborted) {
+      aborted = true;
+      break;
+    }
 
     data_load_time += workers[i]->total_insert_time;
     data_load_time /= 1000000;
   }
 
   printf("\n");
-  printf("Concurrent Workers  : %d\n", workers[0]->share->concurrency);
-  printf("Total INSERT time   : %.5lf secs\n", data_load_time);
-  printf("Total rows inserted : %d\n",
-         workers[0]->share->concurrency * workers[0]->share->nwrite);
+
+  if (aborted) {
+    report_error("failed to run load test");
+  } else {
+    printf("Concurrent Connections : %d\n", workers[0]->share->concurrency);
+    printf("Total Time to INSERT   : %.5lf secs\n", data_load_time);
+    printf("Rows Loaded            : %d\n", workers[0]->share->nwrite);
+  }
 }
 
 void usage() {

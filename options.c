@@ -65,6 +65,9 @@ bool check_options(SKY_SHARE *share) {
       report_error("column placeholder is missing from the INSERT template");
       rv = false;
     }
+  } else {
+    report_error("INSERT query template is missing");
+    rv = false;
   }
 
   if (share->nwrite <= 0) {

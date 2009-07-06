@@ -132,8 +132,6 @@ void *workload(void *arg) {
     pthread_exit(NULL);
   }
 
-  fprintf(stderr, "Worker[%d]: Connection Created.\n", context->unique_id);
-
   /* Switch to the test database */
   if (switch_to_skyload_database(&context->connection) == false) {
     report_error(drizzle_con_error(&context->connection));
@@ -143,7 +141,11 @@ void *workload(void *arg) {
   }
 
   /* Generate and insert queries if specified */
-  for (int i = 0; i < context->share->nwrite; i++) {
+  uint32_t nwrite = rows_to_write(context);
+  if (context->unique_id == 1)
+    fprintf(stdout, "Skyload Worker[0] Progress:\n");
+
+  for (int i = 0; i < nwrite; i++) {
     size_t qlen = next_insert_query(context, query_buf, SKY_STRSIZ);
 
     if (qlen <= 0) {
@@ -178,18 +180,14 @@ void *workload(void *arg) {
        atomic increment or use of mutex which can potentially reduce
        the effectiveness of the load test. */
     if (context->unique_id == 1) {
-      if (context->share->nwrite > 25) {
+      if (nwrite > 25) {
         if(((i + 1) % 25) == 0) {
           putchar('.');
           fflush(stdout);
         }
-        if (((i + 1) % 1000) == 0)
-          fprintf(stdout, " (%d)\n", i + 1);
       }
-      if (context->share->nwrite < 1000 &&
-          i == context->share->nwrite - 1) {
+      if (((i + 1) % 1000) == 0 || i == nwrite-1)
         fprintf(stdout, " (%d)\n", i + 1);
-      }
     }
   }
   sky_close_connection(&context->connection);

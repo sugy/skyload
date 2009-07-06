@@ -99,6 +99,10 @@ void destroy_workers(SKY_WORKER **workers);
 /* calculates time difference in microseconds */
 uint64_t timediff(struct timeval from, struct timeval to);
 
+/* caluclates the number of insertions that a given worker
+   thread must perform */
+uint32_t rows_to_write(SKY_WORKER *worker);
+
 /* Aggregate and print the benchmark result held by all workers */ 
 void aggregate_worker_result(SKY_WORKER **workers);
 
