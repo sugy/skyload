@@ -194,7 +194,7 @@ void aggregate_worker_result(SKY_WORKER **workers) {
 }
 
 void usage() {
-  printf("Skyfall: Parameters with '=' requires an argument\n");
+  printf("skyload: Parameters with '=' requires an argument\n");
   printf("  --server=      : Server Hostname (required)\n");
   printf("  --port=        : Server Port\n");
   printf("  --table=       : Table Creation Statement (required)\n");
