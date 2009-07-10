@@ -118,14 +118,14 @@ bool handle_options(SKY_SHARE *share, int argc, char **argv) {
       share->port = (in_port_t)atoi(optarg);
       break;
     case OPT_NUM_ROWS:
-      share->nwrite = (in_port_t)atoi(optarg);
+      share->nwrite = atoi(optarg);
       break;
     case OPT_CONCURRENCY:
       temp = atoi(optarg);
-      share->concurrency = (in_port_t)(temp <= 0) ? 1 : temp;
+      share->concurrency = (temp <= 0) ? 1 : temp;
       break;
     case OPT_NUM_SELECT:
-      share->nread = (in_port_t)atoi(optarg);
+      share->nread = atoi(optarg);
       break;
     case OPT_MYSQL_PROT:
       share->protocol = DRIZZLE_CON_MYSQL;
