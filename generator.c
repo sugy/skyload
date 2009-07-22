@@ -72,3 +72,33 @@ size_t next_insert_query(SKY_WORKER *worker, char *buffer, size_t buflen) {
   strncpy(write_ptr, pos, buflen-query_length);
   return query_length;
 }
+
+bool preload_sql_file(SKY_SHARE *share) {
+  assert(share && share->sql_file_path && !share->query_list);
+  FILE *sql_file;
+  char buffer[SKY_STRSIZ];
+
+  /* open the SQL file */
+  if (!(sql_file = fopen(share->sql_file_path, "r"))) {
+    report_error("failed to open specified SQL file");
+    return false;
+  }  
+
+  /* create a linked list to load the content to memory */
+  if ((share->query_list = sky_list_new()) == NULL) {
+    fclose(sql_file);
+    return false;
+  }
+
+  /* push all queries found to the list */
+  while (fgets(buffer, SKY_STRSIZ, sql_file) != NULL) {
+    if (!sky_list_push(share->query_list, buffer, strlen(buffer))) {
+      sky_list_free(share->query_list);
+      fclose(sql_file);
+      return false;
+    }
+  }
+
+  fclose(sql_file);
+  return true;
+}

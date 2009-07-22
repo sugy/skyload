@@ -60,13 +60,13 @@ typedef struct {
   in_port_t port;       /* DBMS port to talk to */
   char *server;         /* DBMS Hostname */
   char *create_query;   /* CREATE TABLE query */
-  char *select_query;   /* SELECT query */
   char *insert_tmpl;    /* INSERT query template */
+  char *sql_file_path;  /* Path to the provided SQL file */
   bool keep_db;         /* Whether to drop the test database or not */
   uint16_t protocol;    /* Database protocol */
   uint16_t columns;     /* Number of columns in the table */
   uint32_t nwrite;      /* Number of rows to INSERT */
-  uint32_t nread;       /* Number of times to SELECT */
+  uint32_t runs;        /* Number of times to run the test */
   uint32_t concurrency; /* Number of concurrent connections */
 } SKY_SHARE;
  

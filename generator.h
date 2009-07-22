@@ -17,10 +17,16 @@
 #define PLACEHOLDER_RAND_LEN 5
 
 #define DEFAULT_RAND_MOD 10000 
+#define MAX_LOADABLE_QUERIES 100000
 
 /* creates the next INSERT query for the given worker object.
    on success, the return value of this function is the length
    of the generated query and 0 on failure */
 size_t next_insert_query(SKY_WORKER *worker, char *buffer, size_t buflen);
+
+/* read the provided external SQL file and convert the content
+   into skyload's internal representation. The internal representation
+   is a singly linked list (SKY_LIST) of queries. */
+bool preload_sql_file(SKY_SHARE *share);
 
 #endif

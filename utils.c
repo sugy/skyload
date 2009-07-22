@@ -36,12 +36,12 @@ SKY_SHARE *sky_share_new(void) {
   share->server = NULL;
   share->query_list = NULL;
   share->create_query = NULL;
-  share->select_query = NULL;
   share->insert_tmpl = NULL;
+  share->sql_file_path = NULL;
   share->keep_db = false;
   share->port = 0;
   share->nwrite = 0;
-  share->nread = 0;
+  share->runs = 1;
   share->concurrency = 1;
   share->protocol = 0;
 
@@ -57,11 +57,11 @@ void sky_share_free(SKY_SHARE *share) {
   if (share->create_query != NULL)
     free(share->create_query);
 
-  if (share->select_query != NULL)
-    free(share->select_query);
-
   if (share->insert_tmpl != NULL)
     free(share->insert_tmpl);
+
+  if (share->sql_file_path != NULL)
+    free(share->sql_file_path);
 
   free(share);
 }
