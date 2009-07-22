@@ -37,9 +37,26 @@
 #define SKY_STRSIZ    1024
 #define SKY_RAND_SEED 149
  
+/* Structure to represent a node for a singly linked query list */
+typedef struct _sky_node {
+  struct _sky_node *next;
+  char *data;
+  size_t length;
+} SKY_LIST_NODE;
+
+/* Structure to represent a singly linked list used to represent
+   the external SQL file provided by the user. Only created when
+   an external file is provided with the '--file=' option */
+typedef struct {
+  SKY_LIST_NODE *head;
+  SKY_LIST_NODE *tail;
+  size_t size;
+} SKY_LIST;
+
 /* Object shared among all worker threads. Only add items that
    will not be updated at runtime to this struct  */
 typedef struct {
+  SKY_LIST *query_list; /* Singly linked list for external queries */
   in_port_t port;       /* DBMS port to talk to */
   char *server;         /* DBMS Hostname */
   char *create_query;   /* CREATE TABLE query */
@@ -53,6 +70,8 @@ typedef struct {
   uint32_t concurrency; /* Number of concurrent connections */
 } SKY_SHARE;
  
+/* Structure to represent a worker. Number of workers created
+   is relative to the specified concurrency level. */
 typedef struct {
   SKY_SHARE *share;
   pthread_t thread_id;
@@ -96,6 +115,21 @@ SKY_WORKER **create_workers(SKY_SHARE *share);
 
 /* free an array of workers*/
 void destroy_workers(SKY_WORKER **workers);
+
+/* create a linked list */
+SKY_LIST *sky_list_new(void);
+
+/* free a linked list */
+void sky_list_free(SKY_LIST *list);
+
+/* create a node for the linked list */
+SKY_LIST_NODE *sky_node_new(void);
+
+/* push data to the list */
+bool sky_list_push(SKY_LIST *list, const char *value, const size_t length);
+
+/* free a linked list node */
+void sky_node_free(SKY_LIST_NODE *node);
 
 /* calculates time difference in microseconds */
 uint64_t timediff(struct timeval from, struct timeval to);

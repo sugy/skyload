@@ -34,6 +34,7 @@ SKY_SHARE *sky_share_new(void) {
   }
 
   share->server = NULL;
+  share->query_list = NULL;
   share->create_query = NULL;
   share->select_query = NULL;
   share->insert_tmpl = NULL;
@@ -65,8 +66,77 @@ void sky_share_free(SKY_SHARE *share) {
   free(share);
 }
 
+SKY_LIST *sky_list_new(void) {
+  SKY_LIST *list;
+
+  if ((list = malloc(sizeof(*list))) == NULL)
+    return NULL;
+
+  list->head = NULL;
+  list->tail = NULL;
+  list->size = 0;
+  return list;
+}
+
+void sky_list_free(SKY_LIST *list) {
+  if (list == NULL) return;
+
+  SKY_LIST_NODE *current = list->head;
+  SKY_LIST_NODE *temp = NULL;
+
+  /* free all linked nodes */
+  while(current != NULL) {
+    temp = current;
+    current = current->next;
+    sky_node_free(temp);
+  }
+  free(list);
+}
+
+SKY_LIST_NODE *sky_node_new(void) {
+  SKY_LIST_NODE *node;
+
+  if ((node = malloc(sizeof(*node))) == NULL)
+    return NULL;
+
+  node->next = NULL;
+  node->data = NULL;
+  node->length = 0;
+  return node;
+}
+
+void sky_node_free(SKY_LIST_NODE *node) {
+  if (node == NULL) return;
+  free(node->data);
+  free(node);
+}
+
+bool sky_list_push(SKY_LIST *list, const char *value, const size_t length) {
+  assert(list && length > 0);
+
+  SKY_LIST_NODE *node; 
+
+  if ((node = sky_node_new()) == NULL)
+    return false;
+
+  node->data = malloc(length);
+  node->length = length;
+  strncpy(node->data, value, length);
+  list->size++;
+
+  if (list->head == NULL) {
+    list->head = node;
+    list->tail = node;
+    return true;
+  }
+
+  list->tail->next = node;
+  list->tail = node;
+  return true;
+}
+
 bool sky_create_connection(SKY_SHARE *share, drizzle_st *handle,
-                               drizzle_con_st *conn) {
+                           drizzle_con_st *conn) {
   assert(share && handle);
 
   if (share->server == NULL || share->port == 0)
@@ -139,8 +209,8 @@ char *sky_tolower(char *string) {
   assert(string);
 
   char *pos = string;
-  while(*pos != '\0') {
-    if(*pos >= 'A' && *pos <= 'Z')
+  while (*pos != '\0') {
+    if (*pos >= 'A' && *pos <= 'Z')
       *pos += 'a' - 'A';
     pos++;
   }
