@@ -119,7 +119,11 @@ bool sky_list_push(SKY_LIST *list, const char *value, const size_t length) {
   if ((node = sky_node_new()) == NULL)
     return false;
 
-  node->data = malloc(length);
+  if ((node->data = strdup(value)) == NULL) {
+    sky_node_free(node);
+    return false;
+  }
+
   node->length = length;
   strncpy(node->data, value, length);
   list->size++;

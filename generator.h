@@ -17,7 +17,7 @@
 #define PLACEHOLDER_RAND_LEN 5
 
 #define DEFAULT_RAND_MOD 10000 
-#define MAX_LOADABLE_QUERIES 100000
+#define MAX_LOADABLE_QUERIES 10000000
 
 /* creates the next INSERT query for the given worker object.
    on success, the return value of this function is the length

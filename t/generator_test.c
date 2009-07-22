@@ -9,9 +9,12 @@
 #include "../generator.h"
 
 static bool sky_list_test(void);
+static bool file_load_test(void);
 
 int main(void) {
   if (sky_list_test() == false)
+    return EXIT_FAILURE;
+  if (file_load_test() == false)
     return EXIT_FAILURE;
 
   return EXIT_SUCCESS;
@@ -43,5 +46,47 @@ static bool sky_list_test(void) {
     curr = curr->next;
   }
   sky_list_free(list);
+  return true;
+}
+
+bool file_load_test(void) {
+  SKY_SHARE *share;
+
+  if ((share = sky_share_new()) == NULL)
+    return false;
+
+  share->sql_file_path = strdup("test.sql");
+
+  if (!preload_sql_file(share)) {
+    sky_share_free(share);
+    return false;
+  }
+
+  /* test by looping with the linked list size */
+  SKY_LIST_NODE *curr = share->query_list->head;
+
+  for (int i = 0; i < share->query_list->size; i++) {
+    if (strlen(curr->data) != curr->length) {
+      sky_list_free(share->query_list);
+      sky_share_free(share);
+      return false;
+    }
+    curr = curr->next;
+  }
+
+  curr = share->query_list->head;
+
+  /* test by looking with a pointer */
+  while (curr->next != NULL) {
+    if (strlen(curr->data) != curr->length) {
+      sky_list_free(share->query_list);
+      sky_share_free(share);
+      return false;
+    }
+    curr = curr->next;
+  }
+
+  sky_list_free(share->query_list);
+  sky_share_free(share);
   return true;
 }

@@ -77,6 +77,7 @@ bool preload_sql_file(SKY_SHARE *share) {
   assert(share && share->sql_file_path && !share->query_list);
   FILE *sql_file;
   char buffer[SKY_STRSIZ];
+  int num_loaded = 0;
 
   /* open the SQL file */
   if (!(sql_file = fopen(share->sql_file_path, "r"))) {
@@ -91,12 +92,24 @@ bool preload_sql_file(SKY_SHARE *share) {
   }
 
   /* push all queries found to the list */
-  while (fgets(buffer, SKY_STRSIZ, sql_file) != NULL) {
-    if (!sky_list_push(share->query_list, buffer, strlen(buffer))) {
+  while (fgets(buffer, SKY_STRSIZ, sql_file) != NULL &&
+         num_loaded != MAX_LOADABLE_QUERIES) {
+    size_t query_len = strlen(buffer);
+
+    if (buffer[query_len-1] == '\n') {
+      buffer[query_len-1] = '\0';
+      query_len--;
+    }
+
+    if (!query_len) 
+      continue;
+
+    if (!sky_list_push(share->query_list, buffer, query_len)) {
       sky_list_free(share->query_list);
       fclose(sql_file);
       return false;
     }
+    num_loaded++;
   }
 
   fclose(sql_file);
