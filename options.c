@@ -58,23 +58,35 @@ bool check_options(SKY_SHARE *share) {
     }
   }
 
-  if (share->insert_tmpl != NULL) {
-    if (share->columns > SKY_MAX_COLS) {
-      report_error("too many columns");
-      rv = false;
-    } else if (share->columns <= 0) {
-      report_error("column placeholder is missing from the INSERT template");
+  /* The required options varies depending on whether the user
+     had supplied an external SQL file. For example, a user does
+     not have to supply an INSERT template if an SQL file is provided
+     since INSERT statements could be contained in the file. */
+  if (share->sql_file_path) {
+    if (share->runs < 1) {
+      report_error("--runs must be set to greater than 0");
       rv = false;
     }
   } else {
-    report_error("INSERT query template is missing");
-    rv = false;
+    if (share->insert_tmpl != NULL) {
+      if (share->columns > SKY_MAX_COLS) {
+        report_error("too many columns");
+        rv = false;
+      } else if (share->columns <= 0) {
+        report_error("column placeholder is missing from the INSERT template");
+        rv = false;
+      }
+    } else {
+      report_error("INSERT query template is missing");
+      rv = false;
+    }
+
+    if (share->nwrite < 1) {
+      report_error("--rows must be set to greater than 0");
+      rv = false;
+    }
   }
 
-  if (share->nwrite <= 0) {
-    report_error("--rows must be set to greater than 0");
-    rv = false;
-  }
   return rv;
 }
 
