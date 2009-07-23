@@ -113,34 +113,15 @@ static bool drop_skyload_database(SKY_SHARE *share) {
   return true;
 }
 
-void *workload(void *arg) {
-  assert(arg);
+static bool insert_benchmark(SKY_WORKER *context) {
+  assert(context);
 
-  SKY_WORKER *context = (SKY_WORKER *)arg;
-  char query_buf[SKY_STRSIZ];
   struct timeval start_time;
   struct timeval end_time;
+  char query_buf[SKY_STRSIZ];
   drizzle_result_st result;
   drizzle_return_t ret;
 
-  /* Initialize worker specific connection */
-  if (!sky_create_connection(context->share, &context->database_handle,
-                                 &context->connection)) {
-    report_error("failed to initialize connection");
-    context->aborted = true;
-    drizzle_free(&context->database_handle);
-    pthread_exit(NULL);
-  }
-
-  /* Switch to the test database */
-  if (switch_to_skyload_database(&context->connection) == false) {
-    report_error(drizzle_con_error(&context->connection));
-    context->aborted = true;
-    drizzle_free(&context->database_handle);
-    pthread_exit(NULL);
-  }
-
-  /* Generate and insert queries if specified */
   uint32_t nwrite = rows_to_write(context);
   if (context->unique_id == 1)
     fprintf(stdout, "Skyload Worker[0] Progress:\n");
@@ -190,6 +171,37 @@ void *workload(void *arg) {
         fprintf(stdout, " (%d)\n", i + 1);
     }
   }
+  return true;
+}
+
+void *workload(void *arg) {
+  assert(arg);
+
+  SKY_WORKER *context = (SKY_WORKER *)arg;
+
+  /* Initialize worker specific connection */
+  if (!sky_create_connection(context->share, &context->database_handle,
+                                 &context->connection)) {
+    report_error("failed to initialize connection");
+    context->aborted = true;
+    drizzle_free(&context->database_handle);
+    pthread_exit(NULL);
+  }
+
+  /* Switch to the test database */
+  if (!switch_to_skyload_database(&context->connection)) {
+    report_error(drizzle_con_error(&context->connection));
+    context->aborted = true;
+    drizzle_free(&context->database_handle);
+    pthread_exit(NULL);
+  }
+
+  /* Perform insertion benchmark if speficified */
+  if (context->share->insert_tmpl && context->share->nwrite > 0) {
+    if (!insert_benchmark(context))
+      pthread_exit(NULL);
+  }
+
   sky_close_connection(&context->connection);
   return NULL;
 }
@@ -224,13 +236,21 @@ int main(int argc, char **argv) {
       share->port = DRIZZLE_DEFAULT_PORT;
   }
 
+  /* If provided, load the external SQL file to memory */
+  if (share->sql_file_path) {
+    if (!preload_sql_file(share)) {
+      sky_share_free(share);
+      return EXIT_FAILURE;
+    }
+  }
+
   /* Create worker object(s) */
   if ((workers = create_workers(share)) == NULL) {
     report_error("out of memory");
     return EXIT_FAILURE;
   }
 
-  /* creates a database for skyload to play in */
+  /* Create a database for skyload to play in */
   if (create_skyload_database(share) == false)
     return EXIT_FAILURE;
 
@@ -264,6 +284,9 @@ int main(int argc, char **argv) {
     if (drop_skyload_database(share) == false)
       return EXIT_FAILURE;
   }
+
+  if (share->query_list != NULL)
+    sky_list_free(share->query_list);
 
   destroy_workers(workers);
   sky_share_free(share);
