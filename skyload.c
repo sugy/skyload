@@ -174,6 +174,48 @@ static bool insert_benchmark(SKY_WORKER *context) {
   return true;
 }
 
+static bool sql_file_benchmark(SKY_WORKER *context) {
+  assert(context && context->share->query_list);
+
+  SKY_LIST_NODE *current = context->share->query_list->head;
+  struct timeval start_time;
+  struct timeval end_time;
+  drizzle_result_st result;
+  drizzle_return_t ret;
+
+  size_t nqueries = context->share->runs * context->share->query_list->size;
+
+  for (int i = 0; i < context->share->query_list->size; i++) {
+    gettimeofday(&start_time, NULL);
+    drizzle_query_str(&context->connection, &result, current->data, &ret);
+
+    if (ret != DRIZZLE_RETURN_OK) {
+      fprintf(stderr, "thread[%d] error: %s\n",
+              context->unique_id, drizzle_con_error(&context->connection));
+      context->aborted = true;
+      sky_close_connection(&context->connection);
+      return false;
+    }
+
+    ret = drizzle_result_buffer(&result);
+
+    if (ret != DRIZZLE_RETURN_OK) {
+      fprintf(stderr, "thread[%d] error: %s\n",
+              context->unique_id, drizzle_con_error(&context->connection));
+      context->aborted = true;
+      sky_close_connection(&context->connection);
+      return false;
+    }
+
+    drizzle_result_free(&result);
+    gettimeofday(&end_time, NULL);
+    context->file_benchmark_time += timediff(end_time, start_time);
+
+    current = current->next;
+  }
+  return true;
+}
+
 void *workload(void *arg) {
   assert(arg);
 
@@ -200,6 +242,16 @@ void *workload(void *arg) {
   if (context->share->insert_tmpl && context->share->nwrite > 0) {
     if (!insert_benchmark(context))
       pthread_exit(NULL);
+  }
+
+  /* Run benchmark based on the supplied SQL file */
+  if (context->share->query_list && context->share->query_list->size > 0) {
+    if (context->unique_id == 1)
+      fprintf(stdout, "Benchmarking in SQL File Mode...\n");
+    for (int i = 0; i < context->share->runs; i++) {
+      if (!sql_file_benchmark(context))
+        pthread_exit(NULL);
+    }
   }
 
   sky_close_connection(&context->connection);

@@ -81,6 +81,7 @@ typedef struct {
   uint32_t unique_id;
   uint32_t current_seq_id[SKY_MAX_COLS];
   uint64_t total_insert_time;
+  uint64_t file_benchmark_time;
 } SKY_WORKER;
 
 /* allocator and deallocator. don't add anything more than

@@ -18,6 +18,7 @@ SKY_WORKER *sky_worker_new(void) {
   worker->share = NULL;
   worker->unique_id = 0;
   worker->total_insert_time = 0;
+  worker->file_benchmark_time = 0;
   return worker;
 }
 
@@ -244,26 +245,58 @@ uint32_t rows_to_write(SKY_WORKER *worker){
 
 void aggregate_worker_result(SKY_WORKER **workers) {
   double data_load_time = 0;
+  double file_benchmark_time = 0;
   bool aborted = false;
 
-  for (int i = 0; i < workers[0]->share->concurrency; i++) {
+  SKY_SHARE *share = workers[0]->share;
+
+  for (int i = 0; i < share->concurrency; i++) {
     if (workers[i]->aborted) {
       aborted = true;
       break;
     }
-
     data_load_time += workers[i]->total_insert_time;
     data_load_time /= 1000000;
+
+    file_benchmark_time += workers[i]->file_benchmark_time;
+    file_benchmark_time /= 1000000; 
   }
 
   printf("\n");
 
   if (aborted) {
     report_error("failed to run load test");
-  } else {
-    printf("Concurrent Connections : %d\n", workers[0]->share->concurrency);
+    return;
+  }
+
+  /* Here we need to carefully choose what to output based on
+     the user supplied options. E.g. Only display relevant information. */
+
+  printf("BENCHMARK SUCCESFULLY COMPLETED!\n\n");
+
+  if (share->insert_tmpl) {
+    printf("=======================================\n");
+    printf("TEMPLATE BASED INSERTION RESULT\n");
+    printf("=======================================\n");
+    printf("Concurrent Connections : %d\n", share->concurrency);
     printf("Total Time to INSERT   : %.5lf secs\n", data_load_time);
-    printf("Rows Loaded            : %d\n", workers[0]->share->nwrite);
+    printf("Rows Loaded            : %d\n", share->nwrite);
+    printf("=======================================\n");
+  }
+
+  if (share->insert_tmpl && share->sql_file_path)
+    printf("\n");
+
+  if (share->sql_file_path) {
+    printf("=======================================\n");
+    printf("SQL FILE BASED LOAD RESULT\n");
+    printf("=======================================\n");
+    printf("Concurrent Connections : %d\n", share->concurrency);
+    printf("SQL File               : %s\n", share->sql_file_path);
+    printf("Task Completion Time   : %.5lf secs\n", file_benchmark_time);
+    printf("Number of Queries:     : %d\n", (int)share->query_list->size);
+    printf("Number of Test Runs:   : %d\n", share->runs);
+    printf("=======================================\n");
   }
 }
 
