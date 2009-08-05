@@ -183,8 +183,6 @@ static bool sql_file_benchmark(SKY_WORKER *context) {
   drizzle_result_st result;
   drizzle_return_t ret;
 
-  size_t nqueries = context->share->runs * context->share->query_list->size;
-
   for (int i = 0; i < context->share->query_list->size; i++) {
     gettimeofday(&start_time, NULL);
     drizzle_query_str(&context->connection, &result, current->data, &ret);
@@ -248,6 +246,7 @@ void *workload(void *arg) {
   if (context->share->query_list && context->share->query_list->size > 0) {
     if (context->unique_id == 1)
       fprintf(stdout, "Benchmarking in SQL File Mode...\n");
+
     for (int i = 0; i < context->share->runs; i++) {
       if (!sql_file_benchmark(context))
         pthread_exit(NULL);
@@ -289,7 +288,7 @@ int main(int argc, char **argv) {
   }
 
   /* If provided, load the external SQL file to memory */
-  if (share->sql_file_path) {
+  if (share->read_file_path) {
     if (!preload_sql_file(share)) {
       sky_share_free(share);
       return EXIT_FAILURE;

@@ -61,7 +61,7 @@ typedef struct {
   char *server;         /* DBMS Hostname */
   char *create_query;   /* CREATE TABLE query */
   char *insert_tmpl;    /* INSERT query template */
-  char *sql_file_path;  /* Path to the provided SQL file */
+  char *read_file_path; /* Path to the provided Read-SQL file */
   bool keep_db;         /* Whether to drop the test database or not */
   uint16_t protocol;    /* Database protocol */
   uint16_t columns;     /* Number of columns in the table */

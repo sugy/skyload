@@ -55,7 +55,7 @@ bool file_load_test(void) {
   if ((share = sky_share_new()) == NULL)
     return false;
 
-  share->sql_file_path = strdup("test.sql");
+  share->read_file_path = strdup("test.sql");
 
   if (!preload_sql_file(share)) {
     sky_share_free(share);

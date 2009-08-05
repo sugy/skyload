@@ -74,13 +74,13 @@ size_t next_insert_query(SKY_WORKER *worker, char *buffer, size_t buflen) {
 }
 
 bool preload_sql_file(SKY_SHARE *share) {
-  assert(share && share->sql_file_path && !share->query_list);
+  assert(share && share->read_file_path && !share->query_list);
   FILE *sql_file;
   char buffer[SKY_STRSIZ];
   int num_loaded = 0;
 
   /* open the SQL file */
-  if (!(sql_file = fopen(share->sql_file_path, "r"))) {
+  if (!(sql_file = fopen(share->read_file_path, "r"))) {
     report_error("failed to open specified SQL file");
     return false;
   }  

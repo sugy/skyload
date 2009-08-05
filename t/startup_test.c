@@ -35,15 +35,15 @@ static bool allocation_test(void) {
      and see if the deallocator will not double-free */
   share->server = strdup("localhost");
   share->create_query = strdup("CREATE TABLE t1 (id int primary key);");
-  share->sql_file_path = strdup("/path/to/file");
+  share->read_file_path = strdup("/path/to/file");
 
   free(share->server);
   free(share->create_query);
-  free(share->sql_file_path);
+  free(share->read_file_path);
 
   share->server = NULL; 
   share->create_query = NULL; 
-  share->sql_file_path = NULL;
+  share->read_file_path = NULL;
   
   /* if this screws up, it will kill the test program */
   sky_share_free(share);

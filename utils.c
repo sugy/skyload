@@ -38,7 +38,7 @@ SKY_SHARE *sky_share_new(void) {
   share->query_list = NULL;
   share->create_query = NULL;
   share->insert_tmpl = NULL;
-  share->sql_file_path = NULL;
+  share->read_file_path = NULL;
   share->keep_db = false;
   share->port = 0;
   share->nwrite = 0;
@@ -61,8 +61,8 @@ void sky_share_free(SKY_SHARE *share) {
   if (share->insert_tmpl != NULL)
     free(share->insert_tmpl);
 
-  if (share->sql_file_path != NULL)
-    free(share->sql_file_path);
+  if (share->read_file_path != NULL)
+    free(share->read_file_path);
 
   free(share);
 }
@@ -284,15 +284,15 @@ void aggregate_worker_result(SKY_WORKER **workers) {
     printf("=======================================\n");
   }
 
-  if (share->insert_tmpl && share->sql_file_path)
+  if (share->insert_tmpl && share->read_file_path)
     printf("\n");
 
-  if (share->sql_file_path) {
+  if (share->read_file_path) {
     printf("=======================================\n");
     printf("SQL FILE BASED LOAD RESULT\n");
     printf("=======================================\n");
     printf("Concurrent Connections : %d\n", share->concurrency);
-    printf("SQL File               : %s\n", share->sql_file_path);
+    printf("SQL File               : %s\n", share->read_file_path);
     printf("Task Completion Time   : %.5lf secs\n", file_benchmark_time);
     printf("Number of Queries:     : %d\n", (int)share->query_list->size);
     printf("Number of Test Runs:   : %d\n", share->runs);
@@ -313,7 +313,7 @@ void usage() {
   printf("  --concurrency= : Number of simultaneous clients\n");
   printf("  --rows=        : Number of rows to insert into the table\n");
   printf("======== External File Options ========\n");
-  printf("  --file=        : Path to the SQL file for load emulation\n");
+  printf("  --read-file=   : Path to the SQL file for load emulation\n");
   printf("  --runs=        : Number of times to run the tests in the file\n");
   printf("======== Extra Options ========\n");
   printf("  --keep         : Don't delete the database after the test\n");

@@ -9,7 +9,6 @@ AC_CONFIG_MACRO_DIR([config/m4])
 
 AC_PROG_CC
 AM_PROG_CC_C_O
-AC_PROG_CC_C99
 
 AM_INIT_AUTOMAKE(-Wall -Werror nostdinc subdir-objects)
 
@@ -21,6 +20,8 @@ AC_CHECK_FUNCS([strdup])
 AC_FUNC_MALLOC
 
 AC_SEARCH_LIBS(pthread)
+
+CC="${CC} -std=gnu99"
 
 #--------------------------------------------------------------------
 # Check for libdrizzle

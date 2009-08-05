@@ -18,7 +18,7 @@ typedef enum {
   OPT_CONCURRENCY,
   OPT_NUM_SELECT,
   OPT_KEEP_DB,
-  OPT_SQL_FILE,
+  OPT_READ_FILE,
   OPT_NUM_RUNS,
   OPT_MYSQL_PROT
 } sky_options;
@@ -29,7 +29,7 @@ static struct option longopts[] = {
   {"mysql", no_argument, NULL, OPT_MYSQL_PROT},
   {"port", required_argument, NULL, OPT_PORT},
   {"server", required_argument, NULL, OPT_SERVER},
-  {"file", required_argument, NULL, OPT_SQL_FILE},
+  {"read-file", required_argument, NULL, OPT_READ_FILE},
   {"runs", required_argument, NULL, OPT_NUM_RUNS},
   {"table", required_argument, NULL, OPT_CREATE_QUERY},
   {"insert", required_argument, NULL, OPT_INSERT_TMPL},
@@ -62,7 +62,7 @@ bool check_options(SKY_SHARE *share) {
      had supplied an external SQL file. For example, a user does
      not have to supply an INSERT template if an SQL file is provided
      since INSERT statements could be contained in the file. */
-  if (share->sql_file_path) {
+  if (share->read_file_path) {
     if (share->runs < 1) {
       report_error("--runs must be set to greater than 0");
       rv = false;
@@ -120,8 +120,8 @@ bool handle_options(SKY_SHARE *share, int argc, char **argv) {
       sky_tolower(share->insert_tmpl);
       share->columns = string_occurrence(share->insert_tmpl, "%");
       break;
-    case OPT_SQL_FILE:
-      if ((share->sql_file_path = strdup(optarg)) == NULL) {
+    case OPT_READ_FILE:
+      if ((share->read_file_path = strdup(optarg)) == NULL) {
         report_error("out of memory");
         return false;
       }
