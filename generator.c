@@ -13,6 +13,50 @@ static uint32_t next_id(SKY_WORKER *worker, uint32_t col_num) {
   return worker->current_seq_id[col_num] += worker->share->concurrency;
 }
 
+/* Read a given file and create a list with it's contents */
+static SKY_LIST *load_file_to_list(const char *path) {
+  SKY_LIST *list;
+  FILE *sql_file;
+  char buffer[SKY_STRSIZ];
+  int num_loaded = 0;
+
+  /* open the SQL file */
+  if (!(sql_file = fopen(path, "r"))) {
+    report_error("failed to open the specified SQL file");
+    return false;
+  }  
+
+  /* allocate memory to the provided list pointer */
+  if ((list = sky_list_new()) == NULL) {
+    fclose(sql_file);
+    return false;
+  }
+
+  /* push all queries found to the list */
+  while (fgets(buffer, SKY_STRSIZ, sql_file) != NULL &&
+         num_loaded != MAX_LOADABLE_QUERIES) {
+    size_t query_len = strlen(buffer);
+
+    if (buffer[query_len-1] == '\n') {
+      buffer[query_len-1] = '\0';
+      query_len--;
+    }
+
+    if (!query_len) 
+      continue;
+
+    if (!sky_list_push(list, buffer, query_len)) {
+      sky_list_free(list);
+      fclose(sql_file);
+      return false;
+    }
+    num_loaded++;
+  }
+
+  fclose(sql_file);
+  return list;
+}
+
 size_t next_insert_query(SKY_WORKER *worker, char *buffer, size_t buflen) {
   size_t query_length;  
   char *pos, *write_ptr;
@@ -74,44 +118,11 @@ size_t next_insert_query(SKY_WORKER *worker, char *buffer, size_t buflen) {
 }
 
 bool preload_sql_file(SKY_SHARE *share) {
-  assert(share && share->read_file_path && !share->query_list);
-  FILE *sql_file;
-  char buffer[SKY_STRSIZ];
-  int num_loaded = 0;
+  assert(share);
 
-  /* open the SQL file */
-  if (!(sql_file = fopen(share->read_file_path, "r"))) {
-    report_error("failed to open specified SQL file");
+  share->read_queries = load_file_to_list(share->read_file_path);
+  if (share->read_queries == NULL)
     return false;
-  }  
 
-  /* create a linked list to load the content to memory */
-  if ((share->query_list = sky_list_new()) == NULL) {
-    fclose(sql_file);
-    return false;
-  }
-
-  /* push all queries found to the list */
-  while (fgets(buffer, SKY_STRSIZ, sql_file) != NULL &&
-         num_loaded != MAX_LOADABLE_QUERIES) {
-    size_t query_len = strlen(buffer);
-
-    if (buffer[query_len-1] == '\n') {
-      buffer[query_len-1] = '\0';
-      query_len--;
-    }
-
-    if (!query_len) 
-      continue;
-
-    if (!sky_list_push(share->query_list, buffer, query_len)) {
-      sky_list_free(share->query_list);
-      fclose(sql_file);
-      return false;
-    }
-    num_loaded++;
-  }
-
-  fclose(sql_file);
   return true;
 }

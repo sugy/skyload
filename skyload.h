@@ -56,18 +56,20 @@ typedef struct {
 /* Object shared among all worker threads. Only add items that
    will not be updated at runtime to this struct  */
 typedef struct {
-  SKY_LIST *query_list; /* Singly linked list for external queries */
-  in_port_t port;       /* DBMS port to talk to */
-  char *server;         /* DBMS Hostname */
-  char *create_query;   /* CREATE TABLE query */
-  char *insert_tmpl;    /* INSERT query template */
-  char *read_file_path; /* Path to the provided Read-SQL file */
-  bool keep_db;         /* Whether to drop the test database or not */
-  uint16_t protocol;    /* Database protocol */
-  uint16_t columns;     /* Number of columns in the table */
-  uint32_t nwrite;      /* Number of rows to INSERT */
-  uint32_t runs;        /* Number of times to run the test */
-  uint32_t concurrency; /* Number of concurrent connections */
+  SKY_LIST *load_queries; /* Singly linked list for external load queries */
+  SKY_LIST *read_queries; /* Singly linked list for external read queries */
+  in_port_t port;         /* DBMS port to talk to */
+  char *server;           /* DBMS Hostname */
+  char *create_query;     /* CREATE TABLE query */
+  char *insert_tmpl;      /* INSERT query template */
+  char *load_file_path;   /* Path to the provided Load-SQL file */
+  char *read_file_path;   /* Path to the provided Read-SQL file */
+  bool keep_db;           /* Whether to drop the test database or not */
+  uint16_t protocol;      /* Database protocol */
+  uint16_t columns;       /* Number of columns in the table */
+  uint32_t nwrite;        /* Number of rows to INSERT */
+  uint32_t runs;          /* Number of times to run the test */
+  uint32_t concurrency;   /* Number of concurrent connections */
 } SKY_SHARE;
  
 /* Structure to represent a worker. Number of workers created

@@ -63,30 +63,30 @@ bool file_load_test(void) {
   }
 
   /* test by looping with the linked list size */
-  SKY_LIST_NODE *curr = share->query_list->head;
+  SKY_LIST_NODE *curr = share->read_queries->head;
 
-  for (int i = 0; i < share->query_list->size; i++) {
+  for (int i = 0; i < share->read_queries->size; i++) {
     if (strlen(curr->data) != curr->length) {
-      sky_list_free(share->query_list);
+      sky_list_free(share->read_queries);
       sky_share_free(share);
       return false;
     }
     curr = curr->next;
   }
 
-  curr = share->query_list->head;
+  curr = share->read_queries->head;
 
-  /* test by looking with a pointer */
+  /* test by looping with a pointer */
   while (curr->next != NULL) {
     if (strlen(curr->data) != curr->length) {
-      sky_list_free(share->query_list);
+      sky_list_free(share->read_queries);
       sky_share_free(share);
       return false;
     }
     curr = curr->next;
   }
 
-  sky_list_free(share->query_list);
+  sky_list_free(share->read_queries);
   sky_share_free(share);
   return true;
 }

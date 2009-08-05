@@ -175,15 +175,15 @@ static bool insert_benchmark(SKY_WORKER *context) {
 }
 
 static bool sql_file_benchmark(SKY_WORKER *context) {
-  assert(context && context->share->query_list);
+  assert(context && context->share->read_queries);
 
-  SKY_LIST_NODE *current = context->share->query_list->head;
+  SKY_LIST_NODE *current = context->share->read_queries->head;
   struct timeval start_time;
   struct timeval end_time;
   drizzle_result_st result;
   drizzle_return_t ret;
 
-  for (int i = 0; i < context->share->query_list->size; i++) {
+  for (int i = 0; i < context->share->read_queries->size; i++) {
     gettimeofday(&start_time, NULL);
     drizzle_query_str(&context->connection, &result, current->data, &ret);
 
@@ -243,7 +243,7 @@ void *workload(void *arg) {
   }
 
   /* Run benchmark based on the supplied SQL file */
-  if (context->share->query_list && context->share->query_list->size > 0) {
+  if (context->share->read_queries && context->share->read_queries->size > 0) {
     if (context->unique_id == 1)
       fprintf(stdout, "Benchmarking in SQL File Mode...\n");
 
@@ -288,7 +288,7 @@ int main(int argc, char **argv) {
   }
 
   /* If provided, load the external SQL file to memory */
-  if (share->read_file_path) {
+  if (share->load_file_path || share->read_file_path) {
     if (!preload_sql_file(share)) {
       sky_share_free(share);
       return EXIT_FAILURE;
@@ -336,8 +336,8 @@ int main(int argc, char **argv) {
       return EXIT_FAILURE;
   }
 
-  if (share->query_list != NULL)
-    sky_list_free(share->query_list);
+  if (share->read_queries != NULL)
+    sky_list_free(share->read_queries);
 
   destroy_workers(workers);
   sky_share_free(share);

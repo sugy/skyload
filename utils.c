@@ -35,9 +35,11 @@ SKY_SHARE *sky_share_new(void) {
   }
 
   share->server = NULL;
-  share->query_list = NULL;
+  share->load_queries = NULL;
+  share->read_queries = NULL;
   share->create_query = NULL;
   share->insert_tmpl = NULL;
+  share->load_file_path = NULL;
   share->read_file_path = NULL;
   share->keep_db = false;
   share->port = 0;
@@ -60,6 +62,9 @@ void sky_share_free(SKY_SHARE *share) {
 
   if (share->insert_tmpl != NULL)
     free(share->insert_tmpl);
+
+  if (share->load_file_path != NULL)
+    free(share->load_file_path);
 
   if (share->read_file_path != NULL)
     free(share->read_file_path);
@@ -294,14 +299,14 @@ void aggregate_worker_result(SKY_WORKER **workers) {
     printf("Concurrent Connections : %d\n", share->concurrency);
     printf("SQL File               : %s\n", share->read_file_path);
     printf("Task Completion Time   : %.5lf secs\n", file_benchmark_time);
-    printf("Number of Queries:     : %d\n", (int)share->query_list->size);
+    printf("Number of Queries:     : %d\n", (int)share->read_queries->size);
     printf("Number of Test Runs:   : %d\n", share->runs);
     printf("=======================================\n");
   }
 }
 
 void usage() {
-  printf("skyload 0.4.2: Parameters with '=' requires an argument\n");
+  printf("skyload 0.4.3: Parameters with '=' requires an argument\n");
   printf("\n");
   printf("======== Server Related Options ========\n");
   printf("  --server=      : Server Hostname (required)\n");
