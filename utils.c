@@ -308,19 +308,23 @@ void aggregate_worker_result(SKY_WORKER **workers) {
 void usage() {
   printf("skyload 0.4.3: Parameters with '=' requires an argument\n");
   printf("\n");
-  printf("======== Server Related Options ========\n");
+  printf("[ Server Related Options ]\n");
   printf("  --server=      : Server Hostname (required)\n");
   printf("  --port=        : Server Port\n");
   printf("  --mysql        : Use MySQL Protocol\n");
-  printf("======== Table and Data Load Options ========\n");
+  printf("\n");
+  printf("[ Table and Data Load Options ]\n");
   printf("  --table=       : Table Creation Statement (required)\n");
   printf("  --insert=      : Insert Statement Template\n");
   printf("  --concurrency= : Number of simultaneous clients\n");
   printf("  --rows=        : Number of rows to insert into the table\n");
-  printf("======== External File Options ========\n");
-  printf("  --read-file=   : Path to the SQL file for load emulation\n");
+  printf("\n");
+  printf("[ External File Options ]\n");
+  printf("  --load-file=   : Path to the SQL file for test data creation\n");
+  printf("  --read-file=   : Path to the SQL file for read load\n");
   printf("  --runs=        : Number of times to run the tests in the file\n");
-  printf("======== Extra Options ========\n");
+  printf("\n");
+  printf("[ Extra Options ]\n");
   printf("  --keep         : Don't delete the database after the test\n");
   printf("  --help         : Print this help\n");
   exit(EXIT_SUCCESS);

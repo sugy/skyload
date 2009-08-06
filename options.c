@@ -49,42 +49,51 @@ bool check_options(SKY_SHARE *share) {
     rv = false;
   }
 
-  if (share->create_query == NULL) {
+  /* skyload does not allow both INSERT template and load-file to
+     be provided at the same time. return immediately since this
+     is a critical rule */
+  if (share->insert_tmpl && share->load_file_path) {
+    report_error("can't provide both INSERT template and load file");
+    return false;
+  }
+
+  /* We need either of the following for a table to exist.
+     TODO: Check if there's a CREATE statement in the load file */
+  if (!share->create_query && !share->load_file_path) {
     report_error("table creation statement is missing");
     rv = false;
-  } else {
-    /* currently skyload only supports one table */
+  }
+
+  /* User had specified skyload to auto-generate data. In this
+     case, skyload only supports one table */
+  if (share->insert_tmpl) {
     if (string_occurrence(share->create_query, "create table") > 1) {
       report_error("only one table can be created");
       rv = false;
     }
-  }
 
-  /* The required options varies depending on whether the user
-     had supplied an external SQL file. For example, a user does
-     not have to supply an INSERT template if an SQL file is provided
-     since INSERT statements could be contained in the file. */
-  if (share->read_file_path) {
-    if (share->runs < 1) {
-      report_error("--runs must be set to greater than 0");
+    /* Check INSERT template validity */
+    if (share->columns > SKY_MAX_COLS) {
+      report_error("too many columns");
       rv = false;
-    }
-  } else {
-    if (share->insert_tmpl != NULL) {
-      if (share->columns > SKY_MAX_COLS) {
-        report_error("too many columns");
-        rv = false;
-      } else if (share->columns <= 0) {
-        report_error("column placeholder is missing from the INSERT template");
-        rv = false;
-      }
-    } else {
-      report_error("INSERT query template is missing");
+    } else if (share->columns <= 0) {
+      report_error("column placeholder is missing from the INSERT template");
       rv = false;
     }
 
     if (share->nwrite < 1) {
       report_error("--rows must be set to greater than 0");
+      rv = false;
+    }
+  } else if (!share->load_file_path) {
+    report_error("please supply INSERT template or load file");
+    rv = false;
+  }
+
+  /* User had specified to provide their own read test */
+  if (share->read_file_path) {
+    if (share->runs < 1) {
+      report_error("--runs must be set to greater than 0");
       rv = false;
     }
   }

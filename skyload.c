@@ -272,11 +272,11 @@ int main(int argc, char **argv) {
   }
 
   /* Get user options and set it to share */
-  if (handle_options(share, argc, argv) == false)
+  if (!handle_options(share, argc, argv))
     return EXIT_FAILURE;
 
   /* Check if the provided options make sense */
-  if (check_options(share) == false)
+  if (!check_options(share))
     return EXIT_FAILURE;
 
   /* Use the appropriate port if unspecified */
@@ -338,6 +338,8 @@ int main(int argc, char **argv) {
 
   if (share->read_queries != NULL)
     sky_list_free(share->read_queries);
+  if (share->load_queries != NULL)
+    sky_list_free(share->load_queries);
 
   destroy_workers(workers);
   sky_share_free(share);

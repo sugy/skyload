@@ -23,13 +23,13 @@ static SKY_LIST *load_file_to_list(const char *path) {
   /* open the SQL file */
   if (!(sql_file = fopen(path, "r"))) {
     report_error("failed to open the specified SQL file");
-    return false;
+    return NULL;
   }  
 
   /* allocate memory to the provided list pointer */
   if ((list = sky_list_new()) == NULL) {
     fclose(sql_file);
-    return false;
+    return NULL;
   }
 
   /* push all queries found to the list */
@@ -48,7 +48,7 @@ static SKY_LIST *load_file_to_list(const char *path) {
     if (!sky_list_push(list, buffer, query_len)) {
       sky_list_free(list);
       fclose(sql_file);
-      return false;
+      return NULL;
     }
     num_loaded++;
   }
@@ -120,9 +120,16 @@ size_t next_insert_query(SKY_WORKER *worker, char *buffer, size_t buflen) {
 bool preload_sql_file(SKY_SHARE *share) {
   assert(share);
 
-  share->read_queries = load_file_to_list(share->read_file_path);
-  if (share->read_queries == NULL)
-    return false;
+  if (share->read_file_path) {
+    share->read_queries = load_file_to_list(share->read_file_path);
+    if (share->read_queries == NULL)
+      return false;
+  }
 
+  if (share->load_file_path) {
+    share->load_queries = load_file_to_list(share->load_file_path);
+    if (share->load_queries == NULL)
+      return false;
+  }
   return true;
 }
