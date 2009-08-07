@@ -27,9 +27,8 @@
 #define MYSQL_DEFAULT_PORT 3306
 
 #define SKY_DB_NAME   "skyload"
-#define SKY_DB_CREATE "CREATE DATABASE "
-#define SKY_DB_DROP   "DROP DATABASE IF EXISTS "
-#define SKY_DB_USE    "USE "
+#define SKY_DB_CREATE "CREATE DATABASE skyload"
+#define SKY_DB_DROP   "DROP DATABASE IF EXISTS skyload"
 
 #define SKY_PLACEHOLDER_SYM '%'
 

@@ -1,7 +1,7 @@
 # Skyfall Autoconf Script
 
 AC_PREREQ(2.59)
-AC_INIT(skyload, 0.4.4, dev@torum.net)
+AC_INIT(skyload, 0.4.5, dev@torum.net)
 AC_CONFIG_AUX_DIR(config)
 AC_CONFIG_SRCDIR(skyload.c)
 AC_CONFIG_HEADER([config/config.h])

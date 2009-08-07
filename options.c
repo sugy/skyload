@@ -51,19 +51,28 @@ bool check_options(SKY_SHARE *share) {
     rv = false;
   }
 
+  /* skyload does not allow any write operations on the user
+     supplied database. this policy is placed to avoid undesired
+     updates on the database */
+  if (share->database_name && (share->load_file_path || share->insert_tmpl)) {
+    report_error("write operations on existing database is not allowed");
+    return false;
+  }
+
   /* skyload does not allow both INSERT template and load-file to
      be provided at the same time. return immediately since this
      is a critical rule */
   if (share->insert_tmpl && share->load_file_path) {
-    report_error("can't provide both INSERT template and load file");
+    report_error("INSERT template and load file cannot be supplied together");
     return false;
   }
 
-  /* We need either of the following for a table to exist.
-     TODO: Check if there's a CREATE statement in the load file */
-  if (!share->create_query && !share->load_file_path) {
-    report_error("table creation statement is missing");
-    rv = false;
+  /* TODO: Check if there's a CREATE statement in the load file */
+  if (!share->database_name) {
+    if (!share->create_query && !share->load_file_path) {
+      report_error("table creation statement or load-file is missing");
+      return false;
+    }
   }
 
   /* User had specified skyload to auto-generate data. In this

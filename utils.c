@@ -259,7 +259,8 @@ bool switch_database(SKY_SHARE *share, drizzle_con_st *conn) {
   drizzle_return_t ret;
   drizzle_result_st result;
 
-  snprintf(switch_query, SKY_STRSIZ, "%s%s", SKY_DB_USE, SKY_DB_NAME);
+  char *db = (share->database_name) ? share->database_name : SKY_DB_NAME;
+  snprintf(switch_query, SKY_STRSIZ, "USE %s", db);
   drizzle_query_str(conn, &result, switch_query, &ret);
 
   if (ret != DRIZZLE_RETURN_OK) {
@@ -272,7 +273,6 @@ bool switch_database(SKY_SHARE *share, drizzle_con_st *conn) {
 bool drop_database(SKY_SHARE *share) {
   assert(share);
 
-  char drop_query[SKY_STRSIZ];
   drizzle_st drizzle;
   drizzle_con_st connection;
   drizzle_return_t ret;
@@ -286,8 +286,7 @@ bool drop_database(SKY_SHARE *share) {
     return false;
   }
 
-  snprintf(drop_query, SKY_STRSIZ, "%s%s", SKY_DB_DROP, SKY_DB_NAME);
-  drizzle_query_str(&connection, &result, drop_query, &ret);
+  drizzle_query_str(&connection, &result, SKY_DB_DROP, &ret);
 
   if (ret != DRIZZLE_RETURN_OK) {
     report_error(drizzle_con_error(&connection));
@@ -408,7 +407,7 @@ void aggregate_worker_result(SKY_WORKER **workers) {
 }
 
 void usage() {
-  printf("skyload 0.4.4: Parameters with '=' requires an argument\n");
+  printf("skyload 0.4.5: Parameters with '=' requires an argument\n");
   printf("\n");
   printf("[ Server Related Options ]\n");
   printf("  --server=      : Server Hostname (required)\n");
@@ -434,5 +433,5 @@ void usage() {
 }
 
 void report_error(const char *error) {
-  fprintf(stderr, "skyload error: %s\n", error);
+  fprintf(stderr, "startup error: %s\n", error);
 }

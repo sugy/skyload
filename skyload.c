@@ -12,7 +12,6 @@
 static bool create_skyload_database(SKY_SHARE *share) {
   assert(share);
 
-  char create_query[SKY_STRSIZ];
   drizzle_st drizzle;
   drizzle_con_st connection;
   drizzle_return_t ret;
@@ -35,8 +34,7 @@ static bool create_skyload_database(SKY_SHARE *share) {
   }
 
   /* Now we actually create the database */
-  snprintf(create_query, SKY_STRSIZ, "%s%s", SKY_DB_CREATE, SKY_DB_NAME);
-  drizzle_query_str(&connection, &result, create_query, &ret);
+  drizzle_query_str(&connection, &result, SKY_DB_CREATE, &ret);
 
   if (ret != DRIZZLE_RETURN_OK) {
     report_error(drizzle_con_error(&connection));
@@ -267,9 +265,13 @@ int main(int argc, char **argv) {
     return EXIT_FAILURE;
   }
 
-  /* Create a database for skyload to play in */
-  if (create_skyload_database(share) == false)
-    return EXIT_FAILURE;
+  /* Create a new database if one isn't specified */
+  if (share->database_name == NULL) {
+    if (create_skyload_database(share) == false) {
+      sky_share_free(share);
+      return EXIT_FAILURE;
+    }
+  } 
 
   /* If provided, load the file content to the database */
   if (share->load_file_path && share->load_queries) {
@@ -304,8 +306,9 @@ int main(int argc, char **argv) {
   /* Aggregate and print the benchmark result held by all workers */ 
   aggregate_worker_result(workers);
 
-  /* skyload is done, drop the database unless specified not to */
-  if (share->keep_db == false) {
+  /* skyload is done, drop the database unless we're specified not
+     to or if we're using an existing database */
+  if (!share->keep_db && !share->database_name) {
     if (drop_database(share) == false)
       return EXIT_FAILURE;
   }
