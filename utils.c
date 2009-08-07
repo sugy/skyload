@@ -248,6 +248,71 @@ uint32_t rows_to_write(SKY_WORKER *worker){
   return count;
 }
 
+/* TODO: This function is redundant, refactor the codebase so that
+   the rest of the program runs through a common execution path.
+   Means it's easier to debug and maintain */
+bool preload_database(SKY_SHARE *share) {
+  assert(share && share->load_queries);
+  SKY_LIST_NODE *current = share->load_queries->head;
+
+  uint64_t load_time;
+  struct timeval start_time;
+  struct timeval end_time;
+  drizzle_st drizzle;
+  drizzle_con_st connection;
+  drizzle_result_st result;
+  drizzle_return_t ret;
+
+  drizzle_create(&drizzle);
+
+  fprintf(stdout, "Loading data to database with: %s\n",
+          share->load_file_path);
+
+  /* one-time connection */
+  if (!sky_create_connection(share, &drizzle, &connection)) {
+    report_error("failed to initialize connection");
+    drizzle_free(&drizzle);
+    return false;
+  }
+
+  drizzle_query_str(&connection, &result, SKY_DB_USE, &ret);
+
+  if (ret != DRIZZLE_RETURN_OK) {
+    report_error("failed to switch database");
+    drizzle_free(&drizzle);
+    return false;
+  }
+
+  drizzle_result_free(&result);
+  load_time = 0;
+
+  for (int i = 0; i < share->load_queries->size; i++) {
+    gettimeofday(&start_time, NULL);
+    drizzle_query_str(&connection, &result, current->data, &ret);
+
+    if (ret != DRIZZLE_RETURN_OK) {
+      fprintf(stderr, "failed to load (%s): %s\n", share->load_file_path,
+              drizzle_con_error(&connection));
+      sky_close_connection(&connection);
+      return false;
+    }
+    gettimeofday(&end_time, NULL);
+    load_time += timediff(end_time, start_time);
+    drizzle_result_free(&result);
+    current = current->next;
+  }
+
+  double printable_time = load_time; 
+  printable_time /= 1000000;
+
+  fprintf(stdout, "Loading completed: %d rows in %.3lf seconds\n",
+          (int)share->load_queries->size, printable_time); 
+
+  sky_close_connection(&connection);
+  drizzle_free(&drizzle);
+  return true;
+}
+
 void aggregate_worker_result(SKY_WORKER **workers) {
   double data_load_time = 0;
   double file_benchmark_time = 0;
@@ -267,8 +332,6 @@ void aggregate_worker_result(SKY_WORKER **workers) {
     file_benchmark_time /= 1000000; 
   }
 
-  printf("\n");
-
   if (aborted) {
     report_error("failed to run load test");
     return;
@@ -276,37 +339,27 @@ void aggregate_worker_result(SKY_WORKER **workers) {
 
   /* Here we need to carefully choose what to output based on
      the user supplied options. E.g. Only display relevant information. */
-
-  printf("BENCHMARK SUCCESFULLY COMPLETED!\n\n");
-
   if (share->insert_tmpl) {
-    printf("=======================================\n");
-    printf("TEMPLATE BASED INSERTION RESULT\n");
-    printf("=======================================\n");
-    printf("Concurrent Connections : %d\n", share->concurrency);
-    printf("Total Time to INSERT   : %.5lf secs\n", data_load_time);
-    printf("Rows Loaded            : %d\n", share->nwrite);
-    printf("=======================================\n");
+    printf("\n");
+    printf("[ TEMPLATE BASED INSERTION RESULT ]\n");
+    printf("  Concurrent Connections : %d\n", share->concurrency);
+    printf("  Total Time to INSERT   : %.5lf secs\n", data_load_time);
+    printf("  Rows Loaded            : %d\n", share->nwrite);
   }
 
-  if (share->insert_tmpl && share->read_file_path)
-    printf("\n");
-
   if (share->read_file_path) {
-    printf("=======================================\n");
-    printf("SQL FILE BASED LOAD RESULT\n");
-    printf("=======================================\n");
-    printf("Concurrent Connections : %d\n", share->concurrency);
-    printf("SQL File               : %s\n", share->read_file_path);
-    printf("Task Completion Time   : %.5lf secs\n", file_benchmark_time);
-    printf("Number of Queries:     : %d\n", (int)share->read_queries->size);
-    printf("Number of Test Runs:   : %d\n", share->runs);
-    printf("=======================================\n");
+    printf("\n");
+    printf("[ FILE BASED LOAD EMULATION RESULT ]\n");
+    printf("  SQL File               : %s\n", share->read_file_path);
+    printf("  Concurrent Connections : %d\n", share->concurrency);
+    printf("  Task Completion Time   : %.5lf secs\n", file_benchmark_time);
+    printf("  Number of Queries:     : %d\n", (int)share->read_queries->size);
+    printf("  Number of Test Runs:   : %d\n", share->runs);
   }
 }
 
 void usage() {
-  printf("skyload 0.4.3: Parameters with '=' requires an argument\n");
+  printf("skyload 0.4.4: Parameters with '=' requires an argument\n");
   printf("\n");
   printf("[ Server Related Options ]\n");
   printf("  --server=      : Server Hostname (required)\n");

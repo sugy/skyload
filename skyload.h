@@ -141,6 +141,9 @@ uint64_t timediff(struct timeval from, struct timeval to);
    thread must perform */
 uint32_t rows_to_write(SKY_WORKER *worker);
 
+/* populate the database based on the provided load-file */
+bool preload_database(SKY_SHARE *share);
+
 /* Aggregate and print the benchmark result held by all workers */ 
 void aggregate_worker_result(SKY_WORKER **workers);
 

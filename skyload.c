@@ -69,7 +69,8 @@ static bool create_skyload_database(SKY_SHARE *share) {
   }
 
   /* Create the test table */
-  drizzle_query_str(&connection, &result, share->create_query, &ret);
+  if (share->create_query)
+    drizzle_query_str(&connection, &result, share->create_query, &ret);
 
   if (ret != DRIZZLE_RETURN_OK) {
     report_error(drizzle_con_error(&connection));
@@ -124,7 +125,7 @@ static bool insert_benchmark(SKY_WORKER *context) {
 
   uint32_t nwrite = rows_to_write(context);
   if (context->unique_id == 1)
-    fprintf(stdout, "Skyload Worker[0] Progress:\n");
+    fprintf(stdout, "Skyload Worker[0] INSERT Progress:\n");
 
   for (int i = 0; i < nwrite; i++) {
     size_t qlen = next_insert_query(context, query_buf, SKY_STRSIZ);
@@ -221,7 +222,7 @@ void *workload(void *arg) {
 
   /* Initialize worker specific connection */
   if (!sky_create_connection(context->share, &context->database_handle,
-                                 &context->connection)) {
+                             &context->connection)) {
     report_error("failed to initialize connection");
     context->aborted = true;
     drizzle_free(&context->database_handle);
@@ -240,17 +241,25 @@ void *workload(void *arg) {
   if (context->share->insert_tmpl && context->share->nwrite > 0) {
     if (!insert_benchmark(context))
       pthread_exit(NULL);
+    if (context->unique_id == 1)
+      fprintf(stdout, "Done.\n");
   }
 
   /* Run benchmark based on the supplied SQL file */
   if (context->share->read_queries && context->share->read_queries->size > 0) {
-    if (context->unique_id == 1)
-      fprintf(stdout, "Benchmarking in SQL File Mode...\n");
+    if (context->unique_id == 1) {
+      fprintf(stdout, "\n");
+      fprintf(stdout, "Emulating Read Load with: %s\n",
+              context->share->read_file_path);
+    }
 
     for (int i = 0; i < context->share->runs; i++) {
       if (!sql_file_benchmark(context))
         pthread_exit(NULL);
     }
+
+    if (context->unique_id == 1)
+      fprintf(stdout, "Done.\n");
   }
 
   sky_close_connection(&context->connection);
@@ -288,11 +297,9 @@ int main(int argc, char **argv) {
   }
 
   /* If provided, load the external SQL file to memory */
-  if (share->load_file_path || share->read_file_path) {
-    if (!preload_sql_file(share)) {
-      sky_share_free(share);
-      return EXIT_FAILURE;
-    }
+  if (!preload_sql_file(share)) {
+    sky_share_free(share);
+    return EXIT_FAILURE;
   }
 
   /* Create worker object(s) */
@@ -304,6 +311,14 @@ int main(int argc, char **argv) {
   /* Create a database for skyload to play in */
   if (create_skyload_database(share) == false)
     return EXIT_FAILURE;
+
+  /* If provided, load the file content to the database */
+  if (share->load_file_path && share->load_queries) {
+    if (!preload_database(share)) {
+      sky_share_free(share);
+      return EXIT_FAILURE;
+    }
+  }
 
   pthread_attr_init(&joinable);
   pthread_attr_setdetachstate(&joinable, PTHREAD_CREATE_JOINABLE);
