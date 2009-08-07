@@ -35,6 +35,7 @@ SKY_SHARE *sky_share_new(void) {
   }
 
   share->server = NULL;
+  share->database_name = NULL;
   share->load_queries = NULL;
   share->read_queries = NULL;
   share->create_query = NULL;
@@ -56,6 +57,9 @@ void sky_share_free(SKY_SHARE *share) {
 
   if (share->server != NULL)
     free(share->server);
+
+  if (share->database_name != NULL)
+    free(share->database_name);
 
   if (share->create_query != NULL)
     free(share->create_query);
@@ -248,6 +252,55 @@ uint32_t rows_to_write(SKY_WORKER *worker){
   return count;
 }
 
+bool switch_database(SKY_SHARE *share, drizzle_con_st *conn) {
+  assert(share && conn);
+
+  char switch_query[SKY_STRSIZ];
+  drizzle_return_t ret;
+  drizzle_result_st result;
+
+  snprintf(switch_query, SKY_STRSIZ, "%s%s", SKY_DB_USE, SKY_DB_NAME);
+  drizzle_query_str(conn, &result, switch_query, &ret);
+
+  if (ret != DRIZZLE_RETURN_OK) {
+    return false;
+  }
+  drizzle_result_free(&result);
+  return true;
+}
+
+bool drop_database(SKY_SHARE *share) {
+  assert(share);
+
+  char drop_query[SKY_STRSIZ];
+  drizzle_st drizzle;
+  drizzle_con_st connection;
+  drizzle_return_t ret;
+  drizzle_result_st result;
+
+  drizzle_create(&drizzle);
+
+  if (!sky_create_connection(share, &drizzle, &connection)) {
+    report_error("failed to initialize connection");
+    drizzle_free(&drizzle);
+    return false;
+  }
+
+  snprintf(drop_query, SKY_STRSIZ, "%s%s", SKY_DB_DROP, SKY_DB_NAME);
+  drizzle_query_str(&connection, &result, drop_query, &ret);
+
+  if (ret != DRIZZLE_RETURN_OK) {
+    report_error(drizzle_con_error(&connection));
+    return false;
+  }
+
+  drizzle_result_free(&result);
+
+  sky_close_connection(&connection);
+  drizzle_free(&drizzle);
+  return true;
+}
+
 /* TODO: This function is redundant, refactor the codebase so that
    the rest of the program runs through a common execution path.
    Means it's easier to debug and maintain */
@@ -255,7 +308,6 @@ bool preload_database(SKY_SHARE *share) {
   assert(share && share->load_queries);
   SKY_LIST_NODE *current = share->load_queries->head;
 
-  uint64_t load_time;
   struct timeval start_time;
   struct timeval end_time;
   drizzle_st drizzle;
@@ -275,16 +327,13 @@ bool preload_database(SKY_SHARE *share) {
     return false;
   }
 
-  drizzle_query_str(&connection, &result, SKY_DB_USE, &ret);
-
-  if (ret != DRIZZLE_RETURN_OK) {
-    report_error("failed to switch database");
+  if (!switch_database(share, &connection)) {
+    report_error("failed to change database");
     drizzle_free(&drizzle);
     return false;
   }
 
-  drizzle_result_free(&result);
-  load_time = 0;
+  uint64_t load_time = 0;
 
   for (int i = 0; i < share->load_queries->size; i++) {
     gettimeofday(&start_time, NULL);
@@ -305,7 +354,7 @@ bool preload_database(SKY_SHARE *share) {
   double printable_time = load_time; 
   printable_time /= 1000000;
 
-  fprintf(stdout, "Loading completed: %d rows in %.3lf seconds\n",
+  fprintf(stdout, "Done: %d queries in %.3lf seconds\n",
           (int)share->load_queries->size, printable_time); 
 
   sky_close_connection(&connection);
@@ -349,7 +398,7 @@ void aggregate_worker_result(SKY_WORKER **workers) {
 
   if (share->read_file_path) {
     printf("\n");
-    printf("[ FILE BASED LOAD EMULATION RESULT ]\n");
+    printf("[ READ LOAD EMULATION RESULT ]\n");
     printf("  SQL File               : %s\n", share->read_file_path);
     printf("  Concurrent Connections : %d\n", share->concurrency);
     printf("  Task Completion Time   : %.5lf secs\n", file_benchmark_time);
@@ -378,6 +427,7 @@ void usage() {
   printf("  --runs=        : Number of times to run the tests in the file\n");
   printf("\n");
   printf("[ Extra Options ]\n");
+  printf("  --db=          : Specify the database to run the test on\n");
   printf("  --keep         : Don't delete the database after the test\n");
   printf("  --help         : Print this help\n");
   exit(EXIT_SUCCESS);

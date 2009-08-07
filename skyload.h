@@ -27,14 +27,14 @@
 #define MYSQL_DEFAULT_PORT 3306
 
 #define SKY_DB_NAME   "skyload"
-#define SKY_DB_CREATE "CREATE DATABASE skyload"
-#define SKY_DB_DROP   "DROP DATABASE IF EXISTS skyload"
-#define SKY_DB_USE    "USE skyload"
+#define SKY_DB_CREATE "CREATE DATABASE "
+#define SKY_DB_DROP   "DROP DATABASE IF EXISTS "
+#define SKY_DB_USE    "USE "
 
 #define SKY_PLACEHOLDER_SYM '%'
 
-#define SKY_MAX_COLS  128
 #define SKY_STRSIZ    1024
+#define SKY_MAX_COLS  128
 #define SKY_RAND_SEED 149
  
 /* Structure to represent a node for a singly linked query list */
@@ -60,6 +60,7 @@ typedef struct {
   SKY_LIST *read_queries; /* Singly linked list for external read queries */
   in_port_t port;         /* DBMS port to talk to */
   char *server;           /* DBMS Hostname */
+  char *database_name;    /* User specified database to run tests on */
   char *create_query;     /* CREATE TABLE query */
   char *insert_tmpl;      /* INSERT query template */
   char *load_file_path;   /* Path to the provided Load-SQL file */
@@ -140,6 +141,12 @@ uint64_t timediff(struct timeval from, struct timeval to);
 /* caluclates the number of insertions that a given worker
    thread must perform */
 uint32_t rows_to_write(SKY_WORKER *worker);
+
+/* switch to the specified (or default) database */
+bool switch_database(SKY_SHARE *share, drizzle_con_st *conn);
+
+/* drop a database */
+bool drop_database(SKY_SHARE *share);
 
 /* populate the database based on the provided load-file */
 bool preload_database(SKY_SHARE *share);

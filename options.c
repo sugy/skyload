@@ -18,6 +18,7 @@ typedef enum {
   OPT_CONCURRENCY,
   OPT_NUM_SELECT,
   OPT_KEEP_DB,
+  OPT_USE_DB,
   OPT_LOAD_FILE,
   OPT_READ_FILE,
   OPT_NUM_RUNS,
@@ -28,6 +29,7 @@ static struct option longopts[] = {
   {"help", no_argument, NULL, OPT_HELP},
   {"keep", no_argument, NULL, OPT_KEEP_DB},
   {"mysql", no_argument, NULL, OPT_MYSQL_PROT},
+  {"db", required_argument, NULL, OPT_USE_DB},
   {"port", required_argument, NULL, OPT_PORT},
   {"server", required_argument, NULL, OPT_SERVER},
   {"load-file", required_argument, NULL, OPT_LOAD_FILE},
@@ -139,6 +141,12 @@ bool handle_options(SKY_SHARE *share, int argc, char **argv) {
       break;
     case OPT_READ_FILE:
       if ((share->read_file_path = strdup(optarg)) == NULL) {
+        report_error("out of memory");
+        return false;
+      }
+      break;
+    case OPT_USE_DB:
+      if ((share->database_name = strdup(optarg)) == NULL) {
         report_error("out of memory");
         return false;
       }

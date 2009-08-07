@@ -9,24 +9,10 @@
 #include "skyload.h"
 #include "generator.h"
 
-static bool switch_to_skyload_database(drizzle_con_st *conn) {
-  assert(conn);
-
-  drizzle_return_t ret;
-  drizzle_result_st result;
-
-  drizzle_query_str(conn, &result, SKY_DB_USE, &ret);
-
-  if (ret != DRIZZLE_RETURN_OK) {
-    return false;
-  }
-  drizzle_result_free(&result);
-  return true;
-}
-
 static bool create_skyload_database(SKY_SHARE *share) {
   assert(share);
 
+  char create_query[SKY_STRSIZ];
   drizzle_st drizzle;
   drizzle_con_st connection;
   drizzle_return_t ret;
@@ -42,27 +28,26 @@ static bool create_skyload_database(SKY_SHARE *share) {
 
   /* Attempt to drop the database just in case the database
      still exists from the previous run. */
-  drizzle_query_str(&connection, &result, SKY_DB_DROP, &ret);
-
-  if (ret != DRIZZLE_RETURN_OK) {
-    report_error(drizzle_con_error(&connection));
+  if (!drop_database(share)) {
+    report_error("failed to drop database");
     drizzle_free(&drizzle);
     return false;
   }
-  drizzle_result_free(&result);
 
   /* Now we actually create the database */
-  drizzle_query_str(&connection, &result, SKY_DB_CREATE, &ret);
+  snprintf(create_query, SKY_STRSIZ, "%s%s", SKY_DB_CREATE, SKY_DB_NAME);
+  drizzle_query_str(&connection, &result, create_query, &ret);
 
   if (ret != DRIZZLE_RETURN_OK) {
     report_error(drizzle_con_error(&connection));
     drizzle_free(&drizzle);
     return false;
   }
+
   drizzle_result_free(&result);
 
   /* Switch to the database that we want to work in */
-  if (switch_to_skyload_database(&connection) == false) {
+  if (!switch_database(share, &connection)) {
     report_error(drizzle_con_error(&connection));
     drizzle_free(&drizzle);
     return false;
@@ -77,36 +62,6 @@ static bool create_skyload_database(SKY_SHARE *share) {
     drizzle_free(&drizzle);
     return false;
   }
-  drizzle_result_free(&result);
-
-  sky_close_connection(&connection);
-  drizzle_free(&drizzle);
-  return true;
-}
-
-static bool drop_skyload_database(SKY_SHARE *share) {
-  assert(share);
-
-  drizzle_st drizzle;
-  drizzle_con_st connection;
-  drizzle_return_t ret;
-  drizzle_result_st result;
-
-  drizzle_create(&drizzle);
-
-  if (!sky_create_connection(share, &drizzle, &connection)) {
-    report_error("failed to initialize connection");
-    drizzle_free(&drizzle);
-    return false;
-  }
-
-  drizzle_query_str(&connection, &result, SKY_DB_DROP, &ret);
-
-  if (ret != DRIZZLE_RETURN_OK) {
-    report_error(drizzle_con_error(&connection));
-    return false;
-  }
-
   drizzle_result_free(&result);
 
   sky_close_connection(&connection);
@@ -230,7 +185,7 @@ void *workload(void *arg) {
   }
 
   /* Switch to the test database */
-  if (!switch_to_skyload_database(&context->connection)) {
+  if (!switch_database(context->share, &context->connection)) {
     report_error(drizzle_con_error(&context->connection));
     context->aborted = true;
     drizzle_free(&context->database_handle);
@@ -281,12 +236,16 @@ int main(int argc, char **argv) {
   }
 
   /* Get user options and set it to share */
-  if (!handle_options(share, argc, argv))
+  if (!handle_options(share, argc, argv)) {
+    sky_share_free(share);
     return EXIT_FAILURE;
+  }
 
   /* Check if the provided options make sense */
-  if (!check_options(share))
+  if (!check_options(share)) {
+    sky_share_free(share);
     return EXIT_FAILURE;
+  }
 
   /* Use the appropriate port if unspecified */
   if (share->port == 0) {
@@ -347,7 +306,7 @@ int main(int argc, char **argv) {
 
   /* skyload is done, drop the database unless specified not to */
   if (share->keep_db == false) {
-    if (drop_skyload_database(share) == false)
+    if (drop_database(share) == false)
       return EXIT_FAILURE;
   }
 
