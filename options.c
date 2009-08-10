@@ -59,6 +59,13 @@ bool check_options(SKY_SHARE *share) {
     return false;
   }
 
+  /* skyload requires either a INSERT template or load file unless
+     the user had specified a existing database (for read-only test) */
+  if (!share->database_name && !share->load_file_path && !share->insert_tmpl) {
+    report_error("No INSERT template or load file");
+    return false;
+  }
+
   /* skyload does not allow both INSERT template and load-file to
      be provided at the same time. return immediately since this
      is a critical rule */
@@ -96,11 +103,7 @@ bool check_options(SKY_SHARE *share) {
       report_error("--rows must be set to greater than 0");
       rv = false;
     }
-  } else if (!share->load_file_path) {
-    report_error("please supply INSERT template or load file");
-    rv = false;
-  }
-
+  } 
   /* User had specified to provide their own read test */
   if (share->read_file_path) {
     if (share->runs < 1) {

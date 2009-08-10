@@ -48,6 +48,7 @@ SKY_SHARE *sky_share_new(void) {
   share->runs = 1;
   share->concurrency = 1;
   share->protocol = 0;
+  share->file_load_time = 0;
 
   return share;
 }
@@ -316,8 +317,7 @@ bool preload_database(SKY_SHARE *share) {
 
   drizzle_create(&drizzle);
 
-  fprintf(stdout, "Loading data to database with: %s\n",
-          share->load_file_path);
+  fprintf(stdout, "Loading data to database: ");
 
   /* one-time connection */
   if (!sky_create_connection(share, &drizzle, &connection)) {
@@ -350,14 +350,12 @@ bool preload_database(SKY_SHARE *share) {
     current = current->next;
   }
 
-  double printable_time = load_time; 
-  printable_time /= 1000000;
-
-  fprintf(stdout, "Done: %d queries in %.3lf seconds\n",
-          (int)share->load_queries->size, printable_time); 
+  share->file_load_time = load_time;
+  share->file_load_time /= 1000000;
 
   sky_close_connection(&connection);
   drizzle_free(&drizzle);
+  fprintf(stdout, "Done\n");
   return true;
 }
 
@@ -387,6 +385,15 @@ void aggregate_worker_result(SKY_WORKER **workers) {
 
   /* Here we need to carefully choose what to output based on
      the user supplied options. E.g. Only display relevant information. */
+
+  if (share->load_file_path) {
+    printf("\n");
+    printf("[ DATABASE LOADED WITH --load-file OPTION ]\n");
+    printf("  SQL File               : %s\n", share->load_file_path);
+    printf("  Number or Queries      : %d\n", (int)share->load_queries->size);
+    printf("  Task Completion Time   : %.3lf secs\n", share->file_load_time);
+  }
+
   if (share->insert_tmpl) {
     printf("\n");
     printf("[ TEMPLATE BASED INSERTION RESULT ]\n");
@@ -407,7 +414,7 @@ void aggregate_worker_result(SKY_WORKER **workers) {
 }
 
 void usage() {
-  printf("skyload 0.4.5: Parameters with '=' requires an argument\n");
+  printf("skyload 0.5.0: Parameters with '=' requires an argument\n");
   printf("\n");
   printf("[ Server Related Options ]\n");
   printf("  --server=      : Server Hostname (required)\n");

@@ -70,6 +70,7 @@ typedef struct {
   uint32_t nwrite;        /* Number of rows to INSERT */
   uint32_t runs;          /* Number of times to run the test */
   uint32_t concurrency;   /* Number of concurrent connections */
+  double file_load_time;  /* Time taken to process a load file */
 } SKY_SHARE;
  
 /* Structure to represent a worker. Number of workers created

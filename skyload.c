@@ -194,16 +194,16 @@ void *workload(void *arg) {
   if (context->share->insert_tmpl && context->share->nwrite > 0) {
     if (!insert_benchmark(context))
       pthread_exit(NULL);
-    if (context->unique_id == 1)
-      fprintf(stdout, "Done.\n");
+    if (context->unique_id == 1) {
+      fprintf(stdout, "\n");
+      fprintf(stdout, "Populating DB with auto generated data: Done\n");
+    }
   }
 
   /* Run benchmark based on the supplied SQL file */
   if (context->share->read_queries && context->share->read_queries->size > 0) {
     if (context->unique_id == 1) {
-      fprintf(stdout, "\n");
-      fprintf(stdout, "Emulating Read Load with: %s\n",
-              context->share->read_file_path);
+      fprintf(stdout, "Emulating Read Load: ");
     }
 
     for (int i = 0; i < context->share->runs; i++) {
@@ -212,7 +212,7 @@ void *workload(void *arg) {
     }
 
     if (context->unique_id == 1)
-      fprintf(stdout, "Done.\n");
+      fprintf(stdout, "Done\n");
   }
 
   sky_close_connection(&context->connection);
